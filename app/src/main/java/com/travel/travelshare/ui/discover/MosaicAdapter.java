@@ -23,6 +23,18 @@ public class MosaicAdapter extends RecyclerView.Adapter<MosaicViewHolder> {
         imageList.add("file:///android_asset/stock_image_2.png");
         imageList.add("file:///android_asset/stock_image_3.png");
         imageList.add("file:///android_asset/stock_image_4.png");
+        imageList.add("file:///android_asset/stock_image_1.png");
+        imageList.add("file:///android_asset/stock_image_2.png");
+        imageList.add("file:///android_asset/stock_image_3.png");
+        imageList.add("file:///android_asset/stock_image_4.png");
+        imageList.add("file:///android_asset/stock_image_1.png");
+        imageList.add("file:///android_asset/stock_image_2.png");
+        imageList.add("file:///android_asset/stock_image_3.png");
+        imageList.add("file:///android_asset/stock_image_4.png");
+        imageList.add("file:///android_asset/stock_image_1.png");
+        imageList.add("file:///android_asset/stock_image_2.png");
+        imageList.add("file:///android_asset/stock_image_3.png");
+        imageList.add("file:///android_asset/stock_image_4.png");
     }
 
     @NonNull

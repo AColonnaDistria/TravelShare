@@ -1,6 +1,7 @@
 package com.travel.travelshare;
 
 import android.os.Bundle;
+import android.widget.TextView;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
@@ -15,6 +16,8 @@ import com.travel.travelshare.databinding.ActivityMainBinding;
 public class MainActivity extends AppCompatActivity {
 
     private ActivityMainBinding binding;
+
+    private TextView pageTitle;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,6 +35,21 @@ public class MainActivity extends AppCompatActivity {
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_activity_main);
         //NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
         NavigationUI.setupWithNavController(binding.navView, navController);
+
+        this.pageTitle = findViewById(R.id.page_title);
+        navController.addOnDestinationChangedListener((controller, destination, arguments) -> {
+            int destinationId = destination.getId();
+
+            if (destinationId == R.id.navigation_map) {
+                this.pageTitle.setText(R.string.title_map);
+            }
+            else if (destinationId == R.id.navigation_discover) {
+                this.pageTitle.setText(R.string.title_discover);
+            }
+            else if (destinationId == R.id.navigation_publish) {
+                this.pageTitle.setText(R.string.title_publish);
+            }
+        });
     }
 
 }

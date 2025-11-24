@@ -3,5 +3,8 @@
     <string name="title_activity_main2">TravelShare</string>
     <string name="title_map">Map</string>
     <string name="title_discover">Discover</string>
-    <string name="title_publish">Publish</string>
+    <string name="title_publish">Publish</string>>
+    <string name="profile_description">My Profile</string>
+    <string name="notifications_description">Notifications</string>
+    <string name="settings_description">Settings</string>
 </resources>
