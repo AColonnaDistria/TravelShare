@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+xmlns:app="http://schemas.android.com/apk/res-auto"
+xmlns:tools="http://schemas.android.com/tools"
+android:layout_width="match_parent"
+android:layout_height="match_parent"
+tools:context=".SearchBarFragment">
+
+    <EditText
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:background="@drawable/search_bar_background"
+
+        android:hint="Search..."
+        android:ellipsize="end"
+        android:scrollHorizontally="true"
+
+        android:maxLines="1"
+
+        android:drawableStart="@drawable/menu_24px"
+        android:drawableEnd="@drawable/search_24px"
+        android:drawablePadding="16dp"
+
+        android:textColorHint="#49454f"
+
+        android:paddingStart="20dp"
+        android:paddingEnd="22dp"
+
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="8dp"
+        />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -15,6 +15,15 @@ import java.util.List;
 
 public class MosaicAdapter extends RecyclerView.Adapter<MosaicViewHolder> {
     private List<String> imageList = null;
+    private OnItemClickListener listener;
+
+    public interface OnItemClickListener {
+        void onItemClick(String imagePath, int position);
+    }
+    public void setOnItemClickListener(OnItemClickListener listener) {
+        this.listener = listener;
+    }
+
     public MosaicAdapter() {
         this.imageList = new ArrayList<>();
 
@@ -50,6 +59,14 @@ public class MosaicAdapter extends RecyclerView.Adapter<MosaicViewHolder> {
         String imagePath = imageList.get(position);
 
         holder.show(imagePath);
+        holder.itemView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (listener != null) {
+                    listener.onItemClick(imagePath, position);
+                }
+            }
+        });
     }
 
     @Override

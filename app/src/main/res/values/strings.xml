@@ -7,4 +7,13 @@
     <string name="profile_description">My Profile</string>
     <string name="notifications_description">Notifications</string>
     <string name="settings_description">Settings</string>
+    <string name="back_description">Go back</string>
+    <string name="description_text">Description: %s</string>
+    <string name="instructions_text">Instructions: %s</string>
+
+    <string name="public_text">Public</string>
+    <string name="private_text">Private</string>
+
+    <string name="author_text">From %s</string>
+    <string name="location_text">At %s</string>
 </resources>
