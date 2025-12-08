@@ -33,8 +33,6 @@ import java.util.Date;
 import java.util.Locale;
 
 public class PublishFragment extends Fragment {
-    private static final int CAMERA_REQUEST = 100;
-    private static final int PICK_IMAGE_REQUEST = 101;
 
     private FragmentPublishBinding binding;
 
