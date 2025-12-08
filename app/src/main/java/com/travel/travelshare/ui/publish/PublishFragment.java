@@ -51,6 +51,7 @@ public class PublishFragment extends Fragment {
     private MaterialButton visibilityPublicToggleButton;
     private MaterialButton visibilityPrivateToggleButton;
     private ActivityResultLauncher<Uri> takePictureLauncher;
+    private ActivityResultLauncher<androidx.activity.result.PickVisualMediaRequest> pickMediaLauncher;
     private PublishViewModel mViewModel;
 
     @Override
@@ -81,6 +82,24 @@ public class PublishFragment extends Fragment {
                 // User cancelled or camera failed
             }
         });
+
+
+        this.pickMediaLauncher = registerForActivityResult(new ActivityResultContracts.PickVisualMedia(), uri -> {
+            if (uri != null) {
+                Log.v("LOG", "GALLERY_SUCCESS");
+                Log.v("LOG", this.mViewModel.getPhotoURI().getValue().toString());
+                mViewModel.setPhotoURI(uri);
+                // Remove tint
+                binding.publishImageCardview.setImageTintList(null);
+
+                Glide.with(this)
+                        .load(this.mViewModel.getPhotoURI().getValue()) // <--- Use the field here
+                        .into(binding.publishImageCardview);
+            } else {
+                Log.v("LOG", "GALLERY_FAILED");
+                // User cancelled or gallery failed
+            }
+        });
     }
 
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -105,11 +124,10 @@ public class PublishFragment extends Fragment {
         this.uploadButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-
-                startActivityForResult(intent, PICK_IMAGE_REQUEST);
-
-                //intent.get
+                PublishFragment.this.mViewModel.setPhotoURI(createPhotoUri());
+                PublishFragment.this.pickMediaLauncher.launch(new androidx.activity.result.PickVisualMediaRequest.Builder()
+                        .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly.INSTANCE)
+                        .build());
             }
         });
 
@@ -117,7 +135,7 @@ public class PublishFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 PublishFragment.this.mViewModel.setPhotoURI(createPhotoUri());
-                takePictureLauncher.launch(PublishFragment.this.mViewModel.getPhotoURI().getValue());
+                PublishFragment.this.takePictureLauncher.launch(PublishFragment.this.mViewModel.getPhotoURI().getValue());
             }
         });
 
