@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.icu.text.SimpleDateFormat;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -63,11 +64,20 @@ public class PublishFragment extends Fragment {
                 // SUCCESS! The image is already saved at 'photoUri'
                 // You don't get it from 'success', you use the variable you created earlier.
 
-                Glide.with(this)
-                        .load(this.mViewModel.getPhotoURI().getValue()) // <--- Use the field here
-                        .into(binding.publishImageCardview);
+                Log.v("LOG", "CAMERA_SUCCESS");
+                Log.v("LOG", this.mViewModel.getPhotoURI().getValue().toString());
+
+                if (mViewModel.getPhotoURI().getValue() != null) {
+                    // Remove tint
+                    binding.publishImageCardview.setImageTintList(null);
+
+                    Glide.with(this)
+                            .load(this.mViewModel.getPhotoURI().getValue()) // <--- Use the field here
+                            .into(binding.publishImageCardview);
+                }
 
             } else {
+                Log.v("LOG", "CAMERA_FAILED");
                 // User cancelled or camera failed
             }
         });
@@ -111,6 +121,18 @@ public class PublishFragment extends Fragment {
             }
         });
 
+        if (mViewModel.getPhotoURI().getValue() != null) {
+
+            // 1. REMOVE THE GRAY TINT
+            binding.publishImageCardview.setImageTintList(null);
+
+            // 2. Load the image
+            Glide.with(this)
+                    .load(mViewModel.getPhotoURI().getValue())
+                    .centerCrop()
+                    .into(binding.publishImageCardview);
+        }
+
         return root;
     }
 
@@ -137,13 +159,6 @@ public class PublishFragment extends Fragment {
             e.printStackTrace();
             return null;
         }
-    }
-
-    @Override
-    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-        super.onActivityCreated(savedInstanceState);
-        mViewModel = new ViewModelProvider(this).get(PublishViewModel.class);
-        // TODO: Use the ViewModel
     }
 
     @Override
