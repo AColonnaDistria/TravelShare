@@ -1,9 +1,11 @@
 package com.travel.travelshare.model.user;
 
+import com.google.firebase.Timestamp;
+
 public class GuestUser extends User {
     public GuestUser() {}
 
-    public GuestUser(String userId) {
-        super(userId, UserType.GUEST);
+    public GuestUser(String userId, Timestamp createdAt) {
+        super(userId, createdAt, UserType.GUEST);
     }
 }

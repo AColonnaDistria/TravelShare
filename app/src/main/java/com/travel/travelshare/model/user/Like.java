@@ -1,14 +1,18 @@
 package com.travel.travelshare.model.user;
 
+import com.google.firebase.Timestamp;
+
 public class Like {
     private String fromUserId;
     private String postId;
+    private Timestamp createdAt;
 
     public Like() {}
 
-    public Like(String fromUserId, String postId) {
+    public Like(String fromUserId, String postId, Timestamp createdAt) {
         this.setFromUserId(fromUserId);
         this.setPostId(postId);
+        this.createdAt = createdAt;
     }
 
     public String getFromUserId() {

@@ -1,14 +1,20 @@
 package com.travel.travelshare.model.annotation;
 
+import com.google.firebase.Timestamp;
+
 public class AudioAnnotation extends Annotation {
     private String audio_URI;
 
     public AudioAnnotation() {
-        super(AnnotationType.ASSISTED);
+        super(AnnotationType.AUDIO);
     }
 
-    public AudioAnnotation(String audioUri) {
-        super(AnnotationType.AUDIO);
+    public AudioAnnotation(Timestamp createdAt) {
+        super(AnnotationType.AUDIO, createdAt);
+    }
+
+    public AudioAnnotation(String audioUri, Timestamp createdAt) {
+        super(AnnotationType.AUDIO, createdAt);
         this.setAudio_URI(audioUri);
     }
 

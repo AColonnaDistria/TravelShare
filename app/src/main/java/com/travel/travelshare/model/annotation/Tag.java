@@ -1,10 +1,13 @@
 package com.travel.travelshare.model.annotation;
 
+import com.google.firebase.Timestamp;
 import com.travel.travelshare.model.post.FollowableContent;
 
 public class Tag implements FollowableContent {
     private String tagId;
     private String tagName;
+
+    public Tag() {}
 
     public Tag(String tagId, String tagName) {
         this.setTagName(tagName);

@@ -1,14 +1,21 @@
 package com.travel.travelshare.model.post;
 
+import com.google.firebase.Timestamp;
+
 public class SharedTo {
     private String fromUserId; // from
     private String postId;
     private String userGroupId;
+    private Timestamp createdAt;
 
-    public SharedTo(String fromUserId, String postId, String userGroupId) {
+    public SharedTo() {}
+
+    public SharedTo(String fromUserId, String postId, String userGroupId, Timestamp createdAt) {
         this.setFromUserId(fromUserId);
         this.setPostId(postId);
         this.setUserGroupId(userGroupId);
+
+        this.createdAt = createdAt;
     }
 
     public String getFromUserId() {

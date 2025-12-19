@@ -5,8 +5,11 @@ import com.travel.travelshare.model.annotation.Annotation;
 import com.travel.travelshare.model.location.Location;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 public class PicturePost {
+    private static final int ANNOTATIONS_LIMIT = 16;
 
     private String authorId;
     private String photo_URI;
@@ -16,6 +19,7 @@ public class PicturePost {
     private Timestamp createdAt;
     private boolean visibility;
     private Location location;
+
     // Up to 16 annotations
     private ArrayList<Annotation> annotations;
 
@@ -27,7 +31,88 @@ public class PicturePost {
 
     public PicturePost() {}
 
-    public PicturePost(String imageUri, boolean visibility, Timestamp timestamp, String description, String instructions, String location) {
+    public PicturePost(Timestamp createdAt) {
+        this.createdAt = createdAt;
+    }
 
+    public String getAuthorId() {
+        return authorId;
+    }
+
+    public void setAuthorId(String authorId) {
+        this.authorId = authorId;
+    }
+
+    public String getPhoto_URI() {
+        return photo_URI;
+    }
+
+    public void setPhoto_URI(String photo_URI) {
+        this.photo_URI = photo_URI;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public String getInstructions() {
+        return instructions;
+    }
+
+    public void setInstructions(String instructions) {
+        this.instructions = instructions;
+    }
+
+    public Timestamp getDate() {
+        return date;
+    }
+
+    public void setDate(Timestamp date) {
+        this.date = date;
+    }
+
+    public Timestamp getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(Timestamp createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public boolean isVisibility() {
+        return visibility;
+    }
+
+    public void setVisibility(boolean visibility) {
+        this.visibility = visibility;
+    }
+
+    public Location getLocation() {
+        return location;
+    }
+
+    public void setLocation(Location location) {
+        this.location = location;
+    }
+
+    public List<Annotation> getAnnotations() {
+        return Collections.unmodifiableList(this.annotations);
+    }
+
+    public boolean setAnnotations(List<Annotation> annotations) {
+        if (annotations.size() >= ANNOTATIONS_LIMIT) return false;
+
+        this.annotations.clear();
+        return this.annotations.addAll(annotations);
+    }
+
+    public boolean addAnnotation(Annotation annotation) {
+        if (this.annotations.size() >= ANNOTATIONS_LIMIT) return false;
+
+        return this.annotations.add(annotation);
     }
 }

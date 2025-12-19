@@ -1,5 +1,6 @@
 package com.travel.travelshare.model.user;
 
+import com.google.firebase.Timestamp;
 import com.travel.travelshare.model.post.FollowableContent;
 import com.travel.travelshare.model.post.PicturePost;
 import com.travel.travelshare.model.post.Comment;
@@ -16,8 +17,8 @@ public class ConnectedUser extends User {
         super(UserType.CONNECTED);
     }
 
-    public ConnectedUser(String userId, String username, String email) {
-        super(userId, UserType.CONNECTED);
+    public ConnectedUser(String userId, String username, String email, Timestamp createdAt) {
+        super(userId, createdAt, UserType.CONNECTED);
 
         this.username = username;
         this.email = email;
