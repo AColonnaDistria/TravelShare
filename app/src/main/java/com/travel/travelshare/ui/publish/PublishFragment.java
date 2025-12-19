@@ -24,15 +24,21 @@ import com.google.android.material.button.MaterialButtonToggleGroup;
 import com.google.android.material.textfield.TextInputEditText;
 import com.travel.travelshare.ChipFilterViewModel;
 import com.travel.travelshare.databinding.FragmentPublishBinding;
+import com.travel.travelshare.model.ImagePublication;
+import com.travel.travelshare.storage.Storage;
 
 import androidx.activity.result.contract.ActivityResultContracts;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.Locale;
 
 public class PublishFragment extends Fragment {
+    private Storage storage;
 
     private FragmentPublishBinding binding;
 
@@ -51,10 +57,13 @@ public class PublishFragment extends Fragment {
     private ActivityResultLauncher<Uri> takePictureLauncher;
     private ActivityResultLauncher<androidx.activity.result.PickVisualMediaRequest> pickMediaLauncher;
     private PublishViewModel mViewModel;
+    private Uri imageUri;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        this.storage = new Storage();
 
         this.mViewModel = new ViewModelProvider(this).get(PublishViewModel.class);
 
@@ -69,6 +78,8 @@ public class PublishFragment extends Fragment {
                 if (mViewModel.getPhotoURI().getValue() != null) {
                     // Remove tint
                     binding.publishImageCardview.setImageTintList(null);
+
+                    this.imageUri = PublishFragment.this.mViewModel.getPhotoURI().getValue();
 
                     Glide.with(this)
                             .load(this.mViewModel.getPhotoURI().getValue()) // <--- Use the field here
@@ -89,6 +100,8 @@ public class PublishFragment extends Fragment {
                 mViewModel.setPhotoURI(uri);
                 // Remove tint
                 binding.publishImageCardview.setImageTintList(null);
+
+                this.imageUri = PublishFragment.this.mViewModel.getPhotoURI().getValue();
 
                 Glide.with(this)
                         .load(this.mViewModel.getPhotoURI().getValue()) // <--- Use the field here
@@ -137,7 +150,29 @@ public class PublishFragment extends Fragment {
             }
         });
 
-        if (mViewModel.getPhotoURI().getValue() != null) {
+        this.visibilityPublicToggleButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                PublishFragment.this.mViewModel.setVisibility(true); // set to PUBLIC
+            }
+        });
+
+        this.visibilityPrivateToggleButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                PublishFragment.this.mViewModel.setVisibility(false); // set to PUBLIC
+            }
+        });
+
+        this.publishButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                PublishFragment.this.saveImagePublication();
+            }
+        });
+
+        if (this.mViewModel.getPhotoURI().getValue() != null) {
+            this.imageUri = this.mViewModel.getPhotoURI().getValue();
 
             // 1. REMOVE THE GRAY TINT
             binding.publishImageCardview.setImageTintList(null);
@@ -147,6 +182,27 @@ public class PublishFragment extends Fragment {
                     .load(mViewModel.getPhotoURI().getValue())
                     .centerCrop()
                     .into(binding.publishImageCardview);
+        }
+
+        if (this.mViewModel.getVisibility().getValue() != null) {
+            boolean is_public = this.mViewModel.getVisibility().getValue();
+
+            this.visibilityPublicToggleButton.setChecked(is_public);
+            this.visibilityPrivateToggleButton.setChecked(!is_public);
+        }
+
+        if (this.mViewModel.getDate().getValue() != null) {
+            String dateAsString = DateTimeFormatter.ofPattern("dd/MM/yyyy").format(this.mViewModel.getDate().getValue());
+
+            this.dateEditText.setText(dateAsString);
+        }
+
+        if (this.mViewModel.getDescription().getValue() != null) {
+            this.descriptionEditText.setText(this.mViewModel.getDescription().getValue());
+        }
+
+        if (this.mViewModel.getLocation().getValue() != null) {
+            this.locationEditText.setText(this.mViewModel.getLocation().getValue());
         }
 
         return root;
@@ -175,6 +231,31 @@ public class PublishFragment extends Fragment {
             e.printStackTrace();
             return null;
         }
+    }
+
+    private void saveImagePublication() {
+        Uri imageUri = this.imageUri;
+
+        boolean visibility = this.visibilityPublicToggleButton.isChecked();
+        LocalDateTime date;
+        try {
+            date = LocalDate.parse(
+                    this.dateEditText.getText(),
+                    DateTimeFormatter.ofPattern("dd/MM/yyyy")
+            ).atStartOfDay();
+        }
+        catch (Exception e) {
+            // defaults to zero
+            date = LocalDate.parse(
+                    "01/01/1970",
+                    DateTimeFormatter.ofPattern("dd/MM/yyyy")
+            ).atStartOfDay();
+        }
+        String description = this.descriptionEditText.getText().toString();
+        String instructions = this.instructionsEditText.getText().toString();
+        String location = this.locationEditText.getText().toString();
+
+        this.storage.saveImagePublication(imageUri, visibility, date, description, instructions, location);
     }
 
     @Override

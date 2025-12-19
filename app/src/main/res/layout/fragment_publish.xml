@@ -154,7 +154,7 @@
                 android:layout_height="wrap_content"
                 android:clickable="true"
                 android:inputType="date"
-                android:text="mm/dd/yyyy" />
+                android:text= "dd/mm/yyyy"/>
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.textfield.TextInputLayout
