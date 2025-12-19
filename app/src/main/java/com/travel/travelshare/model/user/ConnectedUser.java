@@ -1,11 +1,9 @@
 package com.travel.travelshare.model.user;
 
-import com.travel.travelshare.model.FollowableContent;
-import com.travel.travelshare.model.PicturePost;
-import com.travel.travelshare.model.Comment;
+import com.travel.travelshare.model.post.FollowableContent;
+import com.travel.travelshare.model.post.PicturePost;
+import com.travel.travelshare.model.post.Comment;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 /* TODO : Handle security better */
@@ -14,10 +12,12 @@ public class ConnectedUser extends User {
     private String hashedPassword;
     private String email;
 
+    /*
     private ArrayList<PicturePost> picturePosts;
     private ArrayList<Comment> comments;
     private ArrayList<FollowableContent> follows;
     private ArrayList<UserGroup> userGroupOwner;
+    */
 
     public ConnectedUser(String username, String hashedPassword, String email) {
         this.username = username;
@@ -26,35 +26,35 @@ public class ConnectedUser extends User {
     }
 
     public void comment(Comment comment) {
-        this.comments.add(comment);
+        throw new UnsupportedOperationException("Not implemented method");
     }
 
     public List<Comment> getComments() {
-        return Collections.unmodifiableList(this.comments);
+        throw new UnsupportedOperationException("Not implemented method");
     }
 
     public void post(PicturePost picturePost) {
-        this.picturePosts.add(picturePost);
+        throw new UnsupportedOperationException("Not implemented method");
     }
 
     public List<PicturePost> getPicturePosts() {
-        return Collections.unmodifiableList(this.picturePosts);
+        throw new UnsupportedOperationException("Not implemented method");
     }
 
     public void follow(FollowableContent followableContent) {
-        this.follows.add(followableContent);
+        throw new UnsupportedOperationException("Not implemented method");
     }
 
     public List<FollowableContent> getFollows() {
-        return Collections.unmodifiableList(this.follows);
+        throw new UnsupportedOperationException("Not implemented method");
     }
 
     public void createGroup(UserGroup userGroup) {
-        this.userGroupOwner.add(userGroup);
+        throw new UnsupportedOperationException("Not implemented method");
     }
 
     public List<UserGroup> getUserGroupsBelongingTo() {
-        return Collections.unmodifiableList(this.userGroupOwner);
+        throw new UnsupportedOperationException("Not implemented method");
     }
 
     public String getUsername() {

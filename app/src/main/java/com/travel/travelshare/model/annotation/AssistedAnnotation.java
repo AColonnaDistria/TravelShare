@@ -5,14 +5,17 @@ import java.util.Collections;
 import java.util.List;
 
 public class AssistedAnnotation extends Annotation {
+    // up to 16 tags
     private ArrayList<Tag> tags;
 
     public AssistedAnnotation() {
 
     }
 
-    public void addTag(Tag tag) {
-        this.tags.add(tag);
+    public boolean addTag(Tag tag) {
+        if (this.tags.size() >= 8) return false;
+
+        return this.tags.add(tag);
     }
 
     public List<Tag> getTags() {

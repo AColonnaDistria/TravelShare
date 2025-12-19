@@ -6,17 +6,20 @@ import java.util.Collections;
 import java.util.List;
 
 public class UserGroup {
-    ArrayList<ConnectedUser> users;
+    // User group is limited to 8 users
+    ArrayList<String> users;
 
     public UserGroup() {
 
     }
 
-    public void addUserMember(ConnectedUser connectedUser) {
-        this.users.add(connectedUser);
+    public boolean addUserMember(String connectedUserId) {
+        if (this.users.size() >= 8) return false;
+
+        return this.users.add(connectedUserId);
     }
 
-    public List<ConnectedUser> getUserMembers()  {
+    public List<String> getUserMembers()  {
         return Collections.unmodifiableList(this.users);
     }
 }
