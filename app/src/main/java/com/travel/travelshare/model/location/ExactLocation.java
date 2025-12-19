@@ -4,6 +4,10 @@ public class ExactLocation extends Location {
     private double latitude;
     private double longitude;
 
+    public ExactLocation() {
+        super(LocationType.EXACT);
+    }
+
     public ExactLocation(double latitude, double longitude) {
         this.setLatitude(latitude);
         this.setLongitude(longitude);

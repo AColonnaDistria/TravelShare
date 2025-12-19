@@ -6,7 +6,13 @@ public class ApproximateLocation extends Location {
     private String region;
     private String country;
 
+    public ApproximateLocation() {
+        super(LocationType.APPROXIMATE);
+    }
+
     public ApproximateLocation(String name, String city, String region, String country) {
+        super(LocationType.APPROXIMATE);
+
         this.setName(name);
         this.setCity(city);
         this.setRegion(region);

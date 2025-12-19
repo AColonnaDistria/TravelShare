@@ -6,19 +6,19 @@ import java.util.List;
 
 public class AssistedAnnotation extends Annotation {
     // up to 16 tags
-    private ArrayList<Tag> tags;
+    private ArrayList<String> tags; // tag ids
 
     public AssistedAnnotation() {
-
+        super(AnnotationType.ASSISTED);
     }
 
-    public boolean addTag(Tag tag) {
+    public boolean addTag(String tagId) {
         if (this.tags.size() >= 8) return false;
 
-        return this.tags.add(tag);
+        return this.tags.add(tagId);
     }
 
-    public List<Tag> getTags() {
+    public List<String> getTags() {
         return Collections.unmodifiableList(tags);
     }
 }

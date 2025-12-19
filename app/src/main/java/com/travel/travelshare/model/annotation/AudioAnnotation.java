@@ -1,9 +1,14 @@
 package com.travel.travelshare.model.annotation;
 
-public class AudioAnnotation {
+public class AudioAnnotation extends Annotation {
     private String audio_URI;
 
+    public AudioAnnotation() {
+        super(AnnotationType.ASSISTED);
+    }
+
     public AudioAnnotation(String audioUri) {
+        super(AnnotationType.AUDIO);
         this.setAudio_URI(audioUri);
     }
 

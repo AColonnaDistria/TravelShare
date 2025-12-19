@@ -7,6 +7,8 @@ public class Comment {
     private String content;
     private Timestamp createdAt;
 
+    public Comment() {}
+
     public Comment(String authorId, String content, Timestamp createdAt) {
         this.setAuthorId(authorId);
         this.setContent(content);

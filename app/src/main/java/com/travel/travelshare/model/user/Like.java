@@ -1,8 +1,10 @@
-package com.travel.travelshare.model.post;
+package com.travel.travelshare.model.user;
 
 public class Like {
     private String fromUserId;
     private String postId;
+
+    public Like() {}
 
     public Like(String fromUserId, String postId) {
         this.setFromUserId(fromUserId);

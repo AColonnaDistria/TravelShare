@@ -5,6 +5,8 @@ public class Follows {
     private String followableContentId;
     private String followableContentType;
 
+    public Follows() {}
+
     public Follows(String fromUserId, String followableContentId, String followableContentType) {
         this.setFromUserId(fromUserId);
         this.setFollowableContentId(followableContentId);

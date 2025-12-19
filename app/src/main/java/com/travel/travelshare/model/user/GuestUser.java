@@ -1,13 +1,9 @@
 package com.travel.travelshare.model.user;
 
 public class GuestUser extends User {
-    private String sessionID;
+    public GuestUser() {}
 
-    public GuestUser(String sessionID) {
-        this.sessionID = sessionID;
-    }
-
-    public String getSessionID() {
-        return sessionID;
+    public GuestUser(String userId) {
+        super(userId, UserType.GUEST);
     }
 }

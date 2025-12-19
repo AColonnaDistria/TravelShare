@@ -9,9 +9,7 @@ public class UserGroup {
     // User group is limited to 8 users
     ArrayList<String> users;
 
-    public UserGroup() {
-
-    }
+    public UserGroup() {}
 
     public boolean addUserMember(String connectedUserId) {
         if (this.users.size() >= 8) return false;

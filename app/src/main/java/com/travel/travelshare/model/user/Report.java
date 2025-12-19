@@ -7,6 +7,8 @@ public class Report {
     private String category;
     private Timestamp createdAt;
 
+    public Report() {}
+
     public Report(String message, String category, Timestamp createdAt) {
         this.message = message;
         this.category = category;

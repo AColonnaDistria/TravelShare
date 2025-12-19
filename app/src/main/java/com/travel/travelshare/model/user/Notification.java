@@ -7,6 +7,8 @@ public class Notification {
     private String category;
     private Timestamp createdAt;
 
+    public Notification() {}
+
     public Notification(String message, String category, Timestamp createdAt) {
         this.setMessage(message);
         this.setCategory(category);
