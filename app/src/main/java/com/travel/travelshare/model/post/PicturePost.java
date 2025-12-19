@@ -31,16 +31,27 @@ public class PicturePost {
 
     public PicturePost() {}
 
+    public PicturePost(
+            String authorId, String photo_URI, String description,
+            String instructions, Timestamp date, Timestamp createdAt,
+            boolean visibility, Location location) {
+        this.authorId = authorId;
+        this.setPhoto_URI(photo_URI);
+        this.setDescription(description);
+        this.setInstructions(instructions);
+        this.setDate(date);
+        this.setVisibility(visibility);
+        this.setLocation(location);
+
+        this.createdAt = createdAt;
+    }
+
     public PicturePost(Timestamp createdAt) {
         this.createdAt = createdAt;
     }
 
     public String getAuthorId() {
         return authorId;
-    }
-
-    public void setAuthorId(String authorId) {
-        this.authorId = authorId;
     }
 
     public String getPhoto_URI() {
@@ -76,19 +87,19 @@ public class PicturePost {
     }
 
     public Timestamp getCreatedAt() {
-        return createdAt;
+        return this.createdAt;
     }
 
-    public void setCreatedAt(Timestamp createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public boolean isVisibility() {
-        return visibility;
+    public boolean isVisible() {
+        return this.visibility;
     }
 
     public void setVisibility(boolean visibility) {
         this.visibility = visibility;
+    }
+
+    public void toggleVisibility() {
+        this.visibility = !this.visibility;
     }
 
     public Location getLocation() {

@@ -22,15 +22,18 @@ import com.bumptech.glide.Glide;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.button.MaterialButtonToggleGroup;
 import com.google.android.material.textfield.TextInputEditText;
+import com.google.firebase.Timestamp;
 import com.travel.travelshare.ChipFilterViewModel;
 import com.travel.travelshare.databinding.FragmentPublishBinding;
-import com.travel.travelshare.model.ImagePublication;
+import com.travel.travelshare.model.location.ApproximateLocation;
+import com.travel.travelshare.model.location.Location;
 import com.travel.travelshare.storage.Storage;
 
 import androidx.activity.result.contract.ActivityResultContracts;
 
 import java.io.File;
 import java.io.IOException;
+import java.sql.Time;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -237,25 +240,35 @@ public class PublishFragment extends Fragment {
         Uri imageUri = this.imageUri;
 
         boolean visibility = this.visibilityPublicToggleButton.isChecked();
-        LocalDateTime date;
+
+        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+        Timestamp timestamp;
         try {
-            date = LocalDate.parse(
-                    this.dateEditText.getText(),
-                    DateTimeFormatter.ofPattern("dd/MM/yyyy")
-            ).atStartOfDay();
+            Date dt = sdf.parse(this.dateEditText.getText().toString());
+            timestamp = new Timestamp(dt);
+        } catch (Exception e) {
+            timestamp = new Timestamp(0, 0);
         }
-        catch (Exception e) {
-            // defaults to zero
-            date = LocalDate.parse(
-                    "01/01/1970",
-                    DateTimeFormatter.ofPattern("dd/MM/yyyy")
-            ).atStartOfDay();
-        }
+
+        Timestamp date = timestamp;
         String description = this.descriptionEditText.getText().toString();
         String instructions = this.instructionsEditText.getText().toString();
-        String location = this.locationEditText.getText().toString();
+        Location location = new ApproximateLocation(
+                this.locationEditText.getText().toString(),
+                "city",
+                "region",
+                "country"
+        );
 
-        this.storage.saveImagePublication(imageUri, visibility, date, description, instructions, location);
+        this.storage.saveImagePublication(
+                "test",
+                imageUri,
+                visibility,
+                date,
+                description,
+                instructions,
+                location
+        );
     }
 
     @Override

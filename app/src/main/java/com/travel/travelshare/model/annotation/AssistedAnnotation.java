@@ -9,6 +9,7 @@ import java.util.List;
 public class AssistedAnnotation extends Annotation {
     // up to 16 tags
     private static final int TAGS_LIMIT = 16;
+    private static final String TAGS_ID = "tags_id";
 
     private ArrayList<String> tagsId; // tag ids
 
@@ -34,7 +35,6 @@ public class AssistedAnnotation extends Annotation {
     }
 
     public List<String> getTagsId() {
-        return Collections.unmodifiableList(tagsId);
+        return Collections.unmodifiableList(this.tagsId);
     }
-
 }

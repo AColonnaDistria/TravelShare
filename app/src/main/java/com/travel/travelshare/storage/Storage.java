@@ -15,11 +15,14 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
-import com.travel.travelshare.model.ImagePublication;
+
+import com.travel.travelshare.model.location.Location;
+import com.travel.travelshare.model.post.PicturePost;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 
 public class Storage {
@@ -38,20 +41,42 @@ public class Storage {
             });
 
         this.firebaseAuth = FirebaseAuth.getInstance();
-        this.firebaseStorage = FirebaseStorage.getInstance("gs://travelshare-2609c.firebasestorage.app");
+        this.firebaseStorage = FirebaseStorage.getInstance(StorageConfig.FIREBASE_STORAGE_URI);
         this.firebaseDB = FirebaseFirestore.getInstance();
         this.firebaseRef = this.firebaseStorage.getReference();
     }
 
-    public void saveImagePublication(Uri imageUri, boolean visibility, LocalDateTime date, String description, String instructions, String location) {
+    private boolean checkIfImage(String path) {
+        Log.v("STORAGE", extractFileExtension(path));
+
+        return StorageConfig.IMAGE_SUPPORTED_EXTENSIONS.contains(extractFileExtension(path));
+    }
+
+    private String extractFileExtension(String path) {
+        int dotIndex = path.lastIndexOf(".");
+        String fileExtension = (dotIndex > 0) ? path.substring(dotIndex + 1).toLowerCase() : "";
+
+        Log.v("STORAGE", fileExtension);
+
+        return fileExtension;
+    }
+
+    public void saveImagePublication(String authorId, Uri imageUri, boolean visibility, Timestamp date, String description, String instructions, Location location) {
         // 1. Get the Image URI from your ViewModel
-        if (imageUri == null) {
+        if (imageUri == null || !checkIfImage(imageUri.toString())) {
             // Handle error: No image selected
+            if (imageUri != null) {
+                Log.e("STORAGE", imageUri.toString() + " is not a valid image URI");
+            }
+            else {
+                Log.e("STORAGE", "Image URI is null");
+            }
             return;
         }
 
+        String fileExtension = extractFileExtension(imageUri.toString());
         // Upload Image
-        String firebaseUri = "images/" + UUID.randomUUID().toString() + ".jpg";
+        String firebaseUri = StorageURIGenerator.generateImageURI(fileExtension);
 
         StorageReference newPostImageRef = this.firebaseRef.child(firebaseUri);
         UploadTask uploadTask = newPostImageRef.putFile(imageUri);
@@ -72,20 +97,14 @@ public class Storage {
                 // ...
                 Log.v("FIREBASE", String.valueOf(taskSnapshot.getMetadata()));
 
-                // convert localdatetime to timestamp;
-                Timestamp timestamp = new Timestamp(Date.from(date.atZone(ZoneId.systemDefault()).toInstant()));
+                Timestamp createdAt = Timestamp.now();
 
-                ImagePublication imagePublication = new ImagePublication(
-                        firebaseUri,
-                        visibility,
-                        timestamp,
-                        description,
-                        instructions,
-                        location
+                PicturePost picturePost = new PicturePost(
+                    authorId, firebaseUri, description, instructions, date, createdAt, visibility, location
                 );
 
-                Storage.this.firebaseDB.collection("posts")
-                        .add(imagePublication)
+                Storage.this.firebaseDB.collection(StorageConfig.PICTURE_POSTS_ROUTE)
+                        .add(picturePost)
                         .addOnSuccessListener(documentReference -> {
                             Log.d("FIREBASE", "Post added with ID: " + documentReference.getId());
                         })

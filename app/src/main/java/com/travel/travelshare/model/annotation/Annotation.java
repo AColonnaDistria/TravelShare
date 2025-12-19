@@ -2,6 +2,9 @@ package com.travel.travelshare.model.annotation;
 
 import com.google.firebase.Timestamp;
 
+import java.util.Collections;
+import java.util.Map;
+
 public class Annotation {
     private AnnotationType annotationType;
     private Timestamp createdAt;
@@ -23,9 +26,5 @@ public class Annotation {
 
     public Timestamp getCreatedAt() {
         return createdAt;
-    }
-
-    public void setCreatedAt(Timestamp createdAt) {
-        this.createdAt = createdAt;
     }
 }
