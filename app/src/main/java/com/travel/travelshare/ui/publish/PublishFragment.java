@@ -1,6 +1,5 @@
 package com.travel.travelshare.ui.publish;
 
-import android.content.Intent;
 import android.icu.text.SimpleDateFormat;
 import android.net.Uri;
 import android.os.Bundle;
@@ -13,33 +12,24 @@ import android.widget.ImageView;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.core.content.FileProvider;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.bumptech.glide.Glide;
 import com.google.android.material.button.MaterialButton;
-import com.google.android.material.button.MaterialButtonToggleGroup;
 import com.google.android.material.textfield.TextInputEditText;
-import com.travel.travelshare.ChipFilterViewModel;
 import com.travel.travelshare.databinding.FragmentPublishBinding;
-import com.travel.travelshare.model.ImagePublication;
-import com.travel.travelshare.storage.Storage;
 
 import androidx.activity.result.contract.ActivityResultContracts;
 
 import java.io.File;
 import java.io.IOException;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.Locale;
 
 public class PublishFragment extends Fragment {
-    private Storage storage;
-
     private FragmentPublishBinding binding;
 
     private ImageView publishPhotoView;
@@ -62,8 +52,6 @@ public class PublishFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        this.storage = new Storage();
 
         this.mViewModel = new ViewModelProvider(this).get(PublishViewModel.class);
 
@@ -167,7 +155,7 @@ public class PublishFragment extends Fragment {
         this.publishButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                PublishFragment.this.saveImagePublication();
+                // Save image publication
             }
         });
 
@@ -231,31 +219,6 @@ public class PublishFragment extends Fragment {
             e.printStackTrace();
             return null;
         }
-    }
-
-    private void saveImagePublication() {
-        Uri imageUri = this.imageUri;
-
-        boolean visibility = this.visibilityPublicToggleButton.isChecked();
-        LocalDateTime date;
-        try {
-            date = LocalDate.parse(
-                    this.dateEditText.getText(),
-                    DateTimeFormatter.ofPattern("dd/MM/yyyy")
-            ).atStartOfDay();
-        }
-        catch (Exception e) {
-            // defaults to zero
-            date = LocalDate.parse(
-                    "01/01/1970",
-                    DateTimeFormatter.ofPattern("dd/MM/yyyy")
-            ).atStartOfDay();
-        }
-        String description = this.descriptionEditText.getText().toString();
-        String instructions = this.instructionsEditText.getText().toString();
-        String location = this.locationEditText.getText().toString();
-
-        this.storage.saveImagePublication(imageUri, visibility, date, description, instructions, location);
     }
 
     @Override
