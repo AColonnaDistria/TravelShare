@@ -60,7 +60,7 @@
             android:id="@+id/dateView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Wednesday, November 19th"
+            android:text="@string/default_card_view_date"
             android:textStyle="bold"
             android:textSize="16sp"
 
@@ -71,7 +71,7 @@
             android:id="@+id/authorView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="From alex2003"
+            android:text="@string/default_card_view_author"
             android:textSize="14sp"
 
             app:layout_constraintTop_toBottomOf="@id/dateView"
@@ -81,7 +81,7 @@
             android:id="@+id/locationView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="At Lâc de Côme"
+            android:text="@string/default_card_view_location"
             android:textSize="14sp"
 
             app:layout_constraintTop_toBottomOf="@id/authorView"
@@ -93,7 +93,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
 
-            android:text = "Public"
+            android:text = "@string/default_card_view_visibility"
             android:drawableLeft="@drawable/public_24px"
 
             app:backgroundTint="@color/white"
@@ -113,7 +113,7 @@
             android:layout_width="wrap_content"
             android:layout_height="24dp"
             android:gravity="center"
-            android:text="0"
+            android:text="@string/default_card_view_dislike_count"
             android:textSize="12sp"
 
             app:layout_constraintTop_toBottomOf="@id/public_private_button"
@@ -135,7 +135,7 @@
             android:layout_width="wrap_content"
             android:layout_height="24dp"
             android:gravity="center"
-            android:text="0"
+            android:text="@string/default_card_view_like_count"
             android:textSize="12sp"
             android:paddingRight="8dp"
 
@@ -173,7 +173,7 @@
             android:id="@+id/text_description"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Description: This is a famous view of Lake Como, Italy, likely taken from Villa Monastero in Varenna, which is known for its botanical gardens and lakeside position."
+            android:text="@string/default_card_view_description"
 
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintLeft_toLeftOf="parent"
@@ -197,7 +197,7 @@
             android:id="@+id/text_instructions"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Instructions: Supporting line text lorem ipsum dolor sit amet, consectetur."
+            android:text="@string/default_card_view_instructions"
 
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintLeft_toLeftOf="parent"

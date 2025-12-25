@@ -11,7 +11,7 @@ tools:context=".SearchBarFragment">
         android:layout_height="48dp"
         android:background="@drawable/search_bar_background"
 
-        android:hint="Search..."
+        android:hint="@string/search_bar_hint"
         android:ellipsize="end"
         android:scrollHorizontally="true"
 

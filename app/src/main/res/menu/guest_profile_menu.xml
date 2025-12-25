@@ -2,17 +2,17 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
         android:id="@+id/action_likes"
-        android:title="My Likes"
+        android:title="@string/guest_profile_likes_menu_entry"
         android:icon="@drawable/thumbs_up_down_24px" />
 
     <item
         android:id="@+id/action_signup"
-        android:title="Signup"
+        android:title="@string/guest_profile_signup_item"
         android:icon="@drawable/person_add_24px" />
 
     <item
         android:id="@+id/action_login"
-        android:title="Log in"
+        android:title="@string/guest_login_item"
         android:icon="@drawable/login_24px" />
 
 

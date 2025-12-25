@@ -16,4 +16,34 @@
 
     <string name="author_text">From %s</string>
     <string name="location_text">At %s</string>
+
+    <!-- Card view -->
+    <string name="default_card_view_date">Wednesday, November 19th</string>
+    <string name="default_card_view_author">From alex2003</string>
+    <string name="default_card_view_location">At Lâc de Côme</string>
+    <string name="default_card_view_visibility">Public</string>
+    <string name="default_card_view_dislike_count">0</string>
+    <string name="default_card_view_like_count">0</string>
+    <string name="default_card_view_description">Description: This is a famous view of Lake Como, Italy, likely taken from Villa Monastero in Varenna, which is known for its botanical gardens and lakeside position.</string>
+    <string name="default_card_view_instructions">Instructions: Supporting line text lorem ipsum dolor sit amet, consectetur.</string>
+    <string name="default_card_view_title">Map</string>
+
+    <!-- Publish view -->
+    <string name="publish_upload_button_text">Upload</string>
+    <string name="publish_take_photo_button_text">Take Photo</string>
+    <string name="publish_visibility_public_text">Public</string>
+    <string name="publish_visibility_private_text">Private</string>
+    <string name="publish_description_hint">Description</string>
+    <string name="publish_instructions_hint">Instructions</string>
+    <string name="publish_location_hint">Location</string>
+    <string name="publish_publish_button_text">Publish</string>
+    <string name="search_bar_hint">Search...</string>
+    <string name="guest_profile_likes_menu_entry">My Likes</string>
+    <string name="guest_profile_signup_item">Signup</string>
+    <string name="guest_login_item">Log in</string>
+    <string name="profile_menu_profile_item">My Profile</string>
+    <string name="profile_menu_groups_item">My Groups</string>
+    <string name="profile_menu_likes_item">My Likes</string>
+    <string name="profile_logout_profile_item">Log out</string>
+
 </resources>
