@@ -24,19 +24,19 @@ public class ApproximateLocation extends Location {
         this.setLongitude(longitude);
     }
 
-    private void setCountry(String country) {
+    public void setCountry(String country) {
         this.country = country;
     }
 
-    private String getCountry() {
+    public String getCountry() {
         return this.country;
     }
 
-    private void setRegion(String region) {
+    public void setRegion(String region) {
         this.region = region;
     }
 
-    private String getRegion() {
+    public String getRegion() {
         return this.region;
     }
 
