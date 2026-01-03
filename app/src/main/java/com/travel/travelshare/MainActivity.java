@@ -3,6 +3,7 @@ package com.travel.travelshare;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -19,7 +20,16 @@ import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
+import com.google.firebase.Timestamp;
+import com.google.firebase.auth.FirebaseAuth;
 import com.travel.travelshare.databinding.ActivityMainBinding;
+import com.travel.travelshare.model.post.Comment;
+import com.travel.travelshare.model.user.Follows;
+import com.travel.travelshare.model.user.Like;
+import com.travel.travelshare.repositories.CommentRepository;
+import com.travel.travelshare.repositories.FollowsRepository;
+import com.travel.travelshare.repositories.LikeRepository;
+import com.travel.travelshare.repositories.PostRepository;
 
 import java.util.List;
 
@@ -81,6 +91,16 @@ public class MainActivity extends AppCompatActivity {
                 MainActivity.this.showNotificationMenu(v);
             }
         });
+
+
+        FirebaseAuth.getInstance().signInAnonymously()
+            .addOnSuccessListener(authResult -> {
+                Log.d("Auth", "Signed in as: " + authResult.getUser().getUid());
+            })
+            .addOnFailureListener(e -> {
+                Log.e("Auth", "Sign in failed", e);
+            });
+
     }
 
     private void showProfileMenu(View anchorView) {

@@ -1,8 +1,10 @@
 package com.travel.travelshare.model.post;
 
 import com.google.firebase.Timestamp;
+import com.travel.travelshare.model.DatabaseItem;
 
-public class SharedTo {
+public class SharedTo implements DatabaseItem {
+    private String id;
     private String fromUserId; // from
     private String postId;
     private String userGroupId;
@@ -10,7 +12,8 @@ public class SharedTo {
 
     public SharedTo() {}
 
-    public SharedTo(String fromUserId, String postId, String userGroupId, Timestamp createdAt) {
+    public SharedTo(String id, String fromUserId, String postId, String userGroupId, Timestamp createdAt) {
+        this.setId(id);
         this.setFromUserId(fromUserId);
         this.setPostId(postId);
         this.setUserGroupId(userGroupId);
@@ -40,5 +43,15 @@ public class SharedTo {
 
     public void setUserGroupId(String userGroupId) {
         this.userGroupId = userGroupId;
+    }
+
+    @Override
+    public String getId() {
+        return this.id;
+    }
+
+    @Override
+    public void setId(String id) {
+        this.id = id;
     }
 }

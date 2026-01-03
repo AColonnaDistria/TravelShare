@@ -19,7 +19,12 @@ import androidx.lifecycle.ViewModelProvider;
 import com.bumptech.glide.Glide;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
+import com.google.firebase.Timestamp;
 import com.travel.travelshare.databinding.FragmentPublishBinding;
+import com.travel.travelshare.model.location.ApproximateLocation;
+import com.travel.travelshare.model.location.Location;
+import com.travel.travelshare.model.post.PicturePost;
+import com.travel.travelshare.repositories.PostRepository;
 
 import androidx.activity.result.contract.ActivityResultContracts;
 
@@ -49,9 +54,13 @@ public class PublishFragment extends Fragment {
     private PublishViewModel mViewModel;
     private Uri imageUri;
 
+    PostRepository postRepository;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        this.postRepository = new PostRepository();
 
         this.mViewModel = new ViewModelProvider(this).get(PublishViewModel.class);
 
@@ -156,6 +165,7 @@ public class PublishFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 // Save image publication
+                PublishFragment.this.saveImagePublication();
             }
         });
 
@@ -194,6 +204,52 @@ public class PublishFragment extends Fragment {
         }
 
         return root;
+    }
+
+    private void saveImagePublication() {
+        Uri imageUri = this.imageUri;
+        if (imageUri == null) {
+            Log.e("PublishFragment", "No image selected!");
+            return; // or show a Toast to user
+        }
+
+        boolean visibility = this.visibilityPublicToggleButton.isChecked();
+
+        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+        Timestamp timestamp;
+        try {
+            Date dt = sdf.parse(this.dateEditText.getText().toString());
+            timestamp = new Timestamp(dt);
+        } catch (Exception e) {
+            timestamp = new Timestamp(0, 0);
+        }
+
+        Timestamp date = timestamp;
+        String description = this.descriptionEditText.getText().toString();
+        String instructions = this.instructionsEditText.getText().toString();
+        Location location = new ApproximateLocation(
+                this.locationEditText.getText().toString(),
+                "city",
+                "region",
+                "country",
+                0.0,
+                0.0
+        );
+
+        Timestamp createdAt = Timestamp.now();
+
+        PicturePost picturePost = new PicturePost(
+            "author",
+            imageUri.toString(),
+            description,
+            instructions,
+            date,
+            createdAt,
+            visibility,
+            location
+        );
+
+        this.postRepository.putItem(picturePost, imageUri);
     }
 
     private Uri createPhotoUri() {

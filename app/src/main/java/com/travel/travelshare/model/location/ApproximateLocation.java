@@ -6,17 +6,22 @@ public class ApproximateLocation extends Location {
     private String region;
     private String country;
 
+    private double latitude; // estimated
+    private double longitude;   // estimated
+
     public ApproximateLocation() {
         super(LocationType.APPROXIMATE);
     }
 
-    public ApproximateLocation(String name, String city, String region, String country) {
+    public ApproximateLocation(String name, String city, String region, String country, double latitude, double longitude) {
         super(LocationType.APPROXIMATE);
 
         this.setName(name);
         this.setCity(city);
         this.setRegion(region);
         this.setCountry(country);
+        this.setLatitude(latitude);
+        this.setLongitude(longitude);
     }
 
     private void setCountry(String country) {
@@ -49,5 +54,21 @@ public class ApproximateLocation extends Location {
 
     public void setCity(String city) {
         this.city = city;
+    }
+
+    public double getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(double latitude) {
+        this.latitude = latitude;
+    }
+
+    public double getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(double longitude) {
+        this.longitude = longitude;
     }
 }

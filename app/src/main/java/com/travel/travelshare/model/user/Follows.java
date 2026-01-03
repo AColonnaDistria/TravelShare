@@ -1,16 +1,20 @@
 package com.travel.travelshare.model.user;
 
 import com.google.firebase.Timestamp;
+import com.travel.travelshare.model.DatabaseItem;
 
-public class Follows {
+public class Follows implements DatabaseItem {
     private String fromUserId;
     private String followableContentId;
     private String followableContentType;
     private Timestamp createdAt;
+    private String id;
 
     public Follows() {}
 
-    public Follows(String fromUserId, String followableContentId, String followableContentType, Timestamp createdAt) {
+    public Follows(String id, String fromUserId, String followableContentId, String followableContentType, Timestamp createdAt) {
+        this.setId(id);
+
         this.setFromUserId(fromUserId);
         this.setFollowableContentId(followableContentId);
         this.setFollowableContentType(followableContentType);
@@ -40,5 +44,15 @@ public class Follows {
 
     public void setFollowableContentType(String followableContentType) {
         this.followableContentType = followableContentType;
+    }
+
+    @Override
+    public String getId() {
+        return this.id;
+    }
+
+    @Override
+    public void setId(String id) {
+        this.id = id;
     }
 }

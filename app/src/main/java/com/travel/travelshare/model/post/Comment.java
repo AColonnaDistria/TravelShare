@@ -1,15 +1,18 @@
 package com.travel.travelshare.model.post;
 
 import com.google.firebase.Timestamp;
+import com.travel.travelshare.model.DatabaseItem;
 
-public class Comment {
+public class Comment implements DatabaseItem {
+    private String id;
     private String authorId;
     private String content;
     private Timestamp createdAt;
 
     public Comment() {}
 
-    public Comment(String authorId, String content, Timestamp createdAt) {
+    public Comment(String id, String authorId, String content, Timestamp createdAt) {
+        this.setId(id);
         this.setAuthorId(authorId);
         this.setContent(content);
         this.setCreatedAt(createdAt);
@@ -37,5 +40,15 @@ public class Comment {
 
     public void setCreatedAt(Timestamp createdAt) {
         this.createdAt = createdAt;
+    }
+
+    @Override
+    public String getId() {
+        return this.id;
+    }
+
+    @Override
+    public void setId(String id) {
+        this.id = id;
     }
 }

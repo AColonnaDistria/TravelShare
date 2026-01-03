@@ -1,22 +1,25 @@
 package com.travel.travelshare.model.user;
 
 import com.google.firebase.Timestamp;
+import com.travel.travelshare.model.DatabaseItem;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-public class UserGroup {
+public class UserGroup implements DatabaseItem {
     private static final int USER_GROUP_LIMIT = 8;
 
     // User group is limited to 8 users
+    private String id;
     private ArrayList<String> usersId;
     private Timestamp createdAt;
 
     public UserGroup() {}
 
-    public UserGroup(Timestamp createdAt) {
+    public UserGroup(String id, Timestamp createdAt) {
+        this.setId(id);
         this.createdAt = createdAt;
     }
 
@@ -33,6 +36,16 @@ public class UserGroup {
     }
 
     public List<String> getUserMembersId()  {
-        return Collections.unmodifiableList(this.usersId);
+        return this.usersId;
+    }
+
+    @Override
+    public String getId() {
+        return this.id;
+    }
+
+    @Override
+    public void setId(String id) {
+        this.id = id;
     }
 }

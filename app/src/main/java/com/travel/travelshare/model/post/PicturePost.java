@@ -1,6 +1,7 @@
 package com.travel.travelshare.model.post;
 
 import com.google.firebase.Timestamp;
+import com.travel.travelshare.model.DatabaseItem;
 import com.travel.travelshare.model.annotation.Annotation;
 import com.travel.travelshare.model.location.Location;
 
@@ -8,8 +9,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class PicturePost {
+public class PicturePost implements DatabaseItem {
     private static final int ANNOTATIONS_LIMIT = 16;
+    private String id;
 
     private String authorId;
     private String photo_URI;
@@ -22,12 +24,6 @@ public class PicturePost {
 
     // Up to 16 annotations
     private ArrayList<Annotation> annotations;
-
-    /*
-    private ArrayList<String> shared_to;
-    private ArrayList<String> comments;
-    private ArrayList<String> liked_by;
-    */
 
     public PicturePost() {}
 
@@ -111,7 +107,7 @@ public class PicturePost {
     }
 
     public List<Annotation> getAnnotations() {
-        return Collections.unmodifiableList(this.annotations);
+        return this.annotations;
     }
 
     public boolean setAnnotations(List<Annotation> annotations) {
@@ -125,5 +121,13 @@ public class PicturePost {
         if (this.annotations.size() >= ANNOTATIONS_LIMIT) return false;
 
         return this.annotations.add(annotation);
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 }
