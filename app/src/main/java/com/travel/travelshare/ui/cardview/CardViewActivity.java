@@ -1,6 +1,4 @@
-package com.travel.travelshare;
-
-import static androidx.core.content.ContentProviderCompat.requireContext;
+package com.travel.travelshare.ui.cardview;
 
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
@@ -8,21 +6,16 @@ import android.os.Bundle;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
 import android.text.style.ImageSpan;
-import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import androidx.activity.EdgeToEdge;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 
 import com.bumptech.glide.Glide;
+import com.travel.travelshare.R;
+import com.travel.travelshare.ui.elements.ReturnBarFragment;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;

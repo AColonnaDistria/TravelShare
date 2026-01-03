@@ -10,7 +10,6 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.PopupMenu;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
@@ -20,16 +19,9 @@ import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
-import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.travel.travelshare.databinding.ActivityMainBinding;
-import com.travel.travelshare.model.post.Comment;
-import com.travel.travelshare.model.user.Follows;
-import com.travel.travelshare.model.user.Like;
-import com.travel.travelshare.repositories.CommentRepository;
-import com.travel.travelshare.repositories.FollowsRepository;
-import com.travel.travelshare.repositories.LikeRepository;
-import com.travel.travelshare.repositories.PostRepository;
+import com.travel.travelshare.ui.cardview.CardViewActivity;
 
 import java.util.List;
 

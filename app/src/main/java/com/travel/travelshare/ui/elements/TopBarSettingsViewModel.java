@@ -1,4 +1,4 @@
-package com.travel.travelshare;
+package com.travel.travelshare.ui.elements;
 
 import androidx.lifecycle.ViewModel;
 

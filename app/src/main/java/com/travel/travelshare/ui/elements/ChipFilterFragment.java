@@ -1,4 +1,4 @@
-package com.travel.travelshare;
+package com.travel.travelshare.ui.elements;
 
 import androidx.lifecycle.ViewModelProvider;
 
@@ -7,8 +7,6 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import androidx.recyclerview.widget.RecyclerView;
-import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
 import android.view.LayoutInflater;
 import android.view.View;
@@ -16,9 +14,8 @@ import android.view.ViewGroup;
 
 import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
+import com.travel.travelshare.R;
 import com.travel.travelshare.databinding.FragmentChipFilterBinding;
-import com.travel.travelshare.databinding.FragmentDiscoverBinding;
-import com.travel.travelshare.ui.discover.MosaicAdapter;
 
 import java.util.Arrays;
 import java.util.List;

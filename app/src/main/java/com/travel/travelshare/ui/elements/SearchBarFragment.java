@@ -1,4 +1,4 @@
-package com.travel.travelshare;
+package com.travel.travelshare.ui.elements;
 
 import androidx.lifecycle.ViewModelProvider;
 
@@ -11,6 +11,8 @@ import androidx.fragment.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+
+import com.travel.travelshare.R;
 
 public class SearchBarFragment extends Fragment {
     private SearchBarViewModel mViewModel;
