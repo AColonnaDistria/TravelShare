@@ -71,6 +71,20 @@ public class CardViewActivity extends AppCompatActivity implements ReturnBarFrag
         }
     }
 
+    /*
+        INTENT:
+
+        IMAGE_PATH
+        FULL_TEXT_DESCRIPTION
+        FULL_TEXT_INSTRUCTIONS
+        COUNT_LIKES
+        COUNT_DISLIKES
+        IS_PUBLIC
+        PUBLISH_DATE
+        AUTHOR
+        LOCATION_NAME
+     */
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

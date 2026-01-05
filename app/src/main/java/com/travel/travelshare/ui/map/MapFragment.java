@@ -15,8 +15,11 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.travel.travelshare.MainActivity;
 import com.travel.travelshare.databinding.FragmentMapBinding;
 import com.travel.travelshare.model.post.PicturePost;
+import com.travel.travelshare.model.user.User;
 import com.travel.travelshare.repositories.PostRepository;
+import com.travel.travelshare.repositories.UserRepository;
 import com.travel.travelshare.ui.cardview.CardViewActivity;
+import com.travel.travelshare.ui.publish.PublishViewModel;
 
 import org.osmdroid.api.IMapController;
 import org.osmdroid.events.DelayedMapListener;
@@ -36,6 +39,8 @@ public class MapFragment extends Fragment {
     private MapView map;
     private IMapController mapController;
 
+    private MapViewModel mViewModel;
+
     private PostRepository postRepository;
 
     private void addMarkersToMap(List<PicturePost> posts) {
@@ -53,10 +58,29 @@ public class MapFragment extends Fragment {
             marker.setOnMarkerClickListener(new Marker.OnMarkerClickListener() {
                 @Override
                 public boolean onMarkerClick(Marker marker, MapView mapView) {
+                    /*
+                        INTENT:
+
+                        IMAGE_PATH
+                        FULL_TEXT_DESCRIPTION
+                        FULL_TEXT_INSTRUCTIONS
+                        COUNT_LIKES
+                        COUNT_DISLIKES
+                        IS_PUBLIC
+                        PUBLISH_DATE
+                        AUTHOR
+                        LOCATION_NAME*/
+
                     Intent intent = new Intent(MapFragment.this.getContext(), CardViewActivity.class);
 
-                    intent.putExtra("IMAGE_PATH", "");
-                    intent.putExtra("POSITION", 0);
+                    intent.putExtra("IMAGE_PATH", post.getPhoto_URI());
+                    intent.putExtra("FULL_TEXT_DESCRIPTION", post.getDescription());
+                    intent.putExtra("FULL_TEXT_INSTRUCTIONS", post.getInstructions());
+                    intent.putExtra("COUNT_LIKES", 0);
+                    intent.putExtra("COUNT_DISLIKES", 0);
+                    intent.putExtra("IS_PUBLIC", post.isVisible());
+                    intent.putExtra("PUBLISH_DATE", post.getDate());
+                    intent.putExtra("AUTHOR", post.getAuthorId());
 
                     startActivity(intent);
 
@@ -101,8 +125,7 @@ public class MapFragment extends Fragment {
                              ViewGroup container, Bundle savedInstanceState) {
         this.postRepository = new PostRepository();
 
-        MapViewModel homeViewModel =
-                new ViewModelProvider(this).get(MapViewModel.class);
+        this.mViewModel = new ViewModelProvider(this).get(MapViewModel.class);
 
         binding = FragmentMapBinding.inflate(inflater, container, false);
         View root = binding.getRoot();

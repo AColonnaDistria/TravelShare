@@ -14,6 +14,7 @@ public class PicturePost implements DatabaseItem {
     private String id;
 
     private String authorId;
+
     private String photo_URI;
     private String description;
     private String instructions;
