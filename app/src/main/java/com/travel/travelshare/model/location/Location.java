@@ -6,6 +6,7 @@ public class Location implements FollowableContent {
     private LocationType type;
     private double latitude;
     private double longitude;
+    private String geohash;
 
     private String name; // estimated
     private String city; // estimated
@@ -14,7 +15,11 @@ public class Location implements FollowableContent {
 
     public Location() {}
 
-    public Location(LocationType type, String name, String city, String region, String country, double latitude, double longitude) {
+    public Location(LocationType type) {
+        this.type = type;
+    }
+
+    public Location(LocationType type, String name, String city, String region, String country, double latitude, double longitude, String geohash) {
         this.type = type;
 
         this.setName(name);
@@ -23,6 +28,7 @@ public class Location implements FollowableContent {
         this.setCountry(country);
         this.setLatitude(latitude);
         this.setLongitude(longitude);
+        this.setGeohash(geohash);
     }
     public LocationType getLocationType() {
         return this.type;
@@ -74,5 +80,13 @@ public class Location implements FollowableContent {
 
     public void setCountry(String country) {
         this.country = country;
+    }
+
+    public String getGeohash() {
+        return geohash;
+    }
+
+    public void setGeohash(String geohash) {
+        this.geohash = geohash;
     }
 }

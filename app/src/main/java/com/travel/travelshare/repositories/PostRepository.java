@@ -5,20 +5,31 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 
+import com.firebase.geofire.GeoFireUtils;
+import com.firebase.geofire.GeoLocation;
+import com.firebase.geofire.GeoQueryBounds;
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
+import com.google.android.gms.tasks.Tasks;
 import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.StorageReference;
-import com.google.firebase.storage.UploadTask;
+import com.google.firebase.firestore.Query;
+import com.google.firebase.firestore.QuerySnapshot;
 import com.travel.travelshare.model.post.PicturePost;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class PostRepository {
     private final FirebaseFirestore database = FirebaseFirestore.getInstance();
-    private final FirebaseStorage storage = FirebaseStorage.getInstance();
+    //private final FirebaseStorage storage = FirebaseStorage.getInstance();
+
     private static final String collectionPath = "travelshare_picture_posts";
-    private static final String storagePath = "travelshare_pictures";
+    //private static final String storagePath = "travelshare_pictures";
 
     public void getItem(String id, OnSuccessListener<PicturePost> listener) {
         this.database.collection(PostRepository.collectionPath).document(id)
@@ -29,31 +40,54 @@ public class PostRepository {
                 });
     }
 
-    /*
-    private static final List<String> IMAGE_SUPPORTED_EXTENSIONS = List.of(
-            ".png", ".jpg", ".jpeg", ".bmp", ".webp", ".gif"
-    );
+    public void getAll(OnSuccessListener<List<PicturePost>> listener) {
+        this.database.collection(PostRepository.collectionPath).get()
+                .addOnSuccessListener(querySnapshot -> {
+                    List<PicturePost> posts = querySnapshot.getDocuments().stream().map(documentSnapshot -> {
+                        return documentSnapshot.toObject(PicturePost.class);
+                    }).collect(Collectors.toList());
 
-
-    private static String extractExtension(String filepath) {
-        if (filepath == null)
-            return null;
-
-        String lowercase_filepath = filepath.toLowerCase();
-        if (!lowercase_filepath.contains("."))
-            return "";
-
-        return (lowercase_filepath.substring(lowercase_filepath.lastIndexOf('.')));
+                    listener.onSuccess(posts);
+                });
     }
 
-    private static boolean isFileSupported(String filepath) {
-        if (filepath == null) return false;
+    public void getNearby(double latCenter, double longCenter, double radiusInMeters, OnSuccessListener<List<PicturePost>> listener) {
+        GeoLocation center = new GeoLocation(latCenter, longCenter);
 
-        String lowercase_filepath = filepath.toLowerCase();
+        List<GeoQueryBounds> bounds = GeoFireUtils.getGeoHashQueryBounds(
+                center,
+                radiusInMeters
+        );
 
-        return PostRepository.IMAGE_SUPPORTED_EXTENSIONS.stream().anyMatch(lowercase_filepath::endsWith);
+        final List<Task<QuerySnapshot>> tasks = new ArrayList<>();
+        for (GeoQueryBounds b : bounds) {
+            Query query = this.database.collection(PostRepository.collectionPath)
+                                        .orderBy("location.geohash")
+                                        .startAt(b.startHash)
+                                        .endAt(b.endHash);
+
+            tasks.add(query.get());
+        }
+
+        Tasks.whenAllComplete(tasks)
+                .addOnCompleteListener(new OnCompleteListener<List<Task<?>>>() {
+                    @Override
+                    public void onComplete(@NonNull Task<List<Task<?>>> t) {
+                        List<PicturePost> posts = new ArrayList<>();
+
+                        for (Task<QuerySnapshot> task : tasks) {
+                            if (task.isSuccessful()) {
+                                QuerySnapshot snap = task.getResult();
+                                for (DocumentSnapshot doc : snap.getDocuments()) {
+                                    posts.add(doc.toObject(PicturePost.class));
+                                }
+                            }
+                        }
+
+                        listener.onSuccess(posts);
+                    }
+                });
     }
-    */
 
     public void putItem(PicturePost item, Uri imageLocalURI) {
         DocumentReference document = this.database.collection(PostRepository.collectionPath).document();
@@ -63,20 +97,17 @@ public class PostRepository {
 
         String filename = id;
 
-        String firebaseImageUri = PostRepository.storagePath + "/" + filename + ".jpg";
-        StorageReference firebaseImageRef = storage.getReference().child(firebaseImageUri);
+        //String firebaseImageUri = PostRepository.storagePath + "/" + filename + ".jpg";
+        //StorageReference firebaseImageRef = storage.getReference().child(firebaseImageUri);
 
-        firebaseImageRef.putFile(imageLocalURI)
-            .addOnFailureListener(new OnFailureListener() {
+        Storage.uploadImage(imageLocalURI, new Storage.OnUploadListener() {
             @Override
-            public void onFailure(@NonNull Exception exception) {
+            public void onFailure(String error) {
                 Log.v("FIREBASE", "Unsuccessful upload");
-                // Handle unsuccessful uploads
             }
-        }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
             @Override
-            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                item.setPhoto_URI(firebaseImageUri);
+            public void onSuccess(String imageUrl) {
+                item.setPhoto_URI(imageUrl);
 
                 document.set(item);
             }

@@ -10,15 +10,9 @@ import com.travel.travelshare.model.user.User;
 import java.util.Map;
 
 public class SimpleRepository<Item extends DatabaseItem> implements IRepository<Item> {
-    private final FirebaseFirestore database = FirebaseFirestore.getInstance();
+    protected final FirebaseFirestore database = FirebaseFirestore.getInstance();
     private final Class<Item> class_;
-    private final String collectionPath;
-
-    private static final Map<Class<?>, String> COLLECTION_PATHS = Map.of(
-            User.class, "travelshare_users",
-            Comment.class, "travelshare_comments",
-            Tag.class, "travelshare_tags"
-    );
+    protected final String collectionPath;
 
     public SimpleRepository(Class<Item> class_, String collectionPath) {
         this.class_ = class_;

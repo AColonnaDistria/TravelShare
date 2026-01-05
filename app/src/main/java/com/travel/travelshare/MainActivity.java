@@ -22,12 +22,17 @@ import androidx.navigation.ui.NavigationUI;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.travel.travelshare.databinding.ActivityMainBinding;
+import com.travel.travelshare.repositories.Storage;
 import com.travel.travelshare.ui.cardview.CardViewActivity;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.osmdroid.config.Configuration;
 import org.osmdroid.library.BuildConfig;
+
+import com.cloudinary.android.MediaManager;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -41,6 +46,9 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // INIT Storage
+        Storage.init(this);
 
         // INIT OSM-DROID
         Configuration.getInstance().load(getApplicationContext(), getSharedPreferences("osmdroid", MODE_PRIVATE));

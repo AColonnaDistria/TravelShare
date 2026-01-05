@@ -233,7 +233,8 @@ public class PublishFragment extends Fragment {
                 "region",
                 "country",
                 0.0,
-                0.0
+                0.0,
+                "s0000"
         );
 
         Timestamp createdAt = Timestamp.now();
