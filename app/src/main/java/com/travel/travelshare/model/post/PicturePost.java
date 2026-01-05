@@ -87,10 +87,9 @@ public class PicturePost implements DatabaseItem {
         return this.createdAt;
     }
 
-    public boolean isVisible() {
+    public boolean getVisibility() {
         return this.visibility;
     }
-
     public void setVisibility(boolean visibility) {
         this.visibility = visibility;
     }

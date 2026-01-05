@@ -1,6 +1,7 @@
 package com.travel.travelshare.ui.map;
 
 import android.content.Intent;
+import android.icu.text.SimpleDateFormat;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -12,6 +13,7 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.Timestamp;
 import com.travel.travelshare.MainActivity;
 import com.travel.travelshare.databinding.FragmentMapBinding;
 import com.travel.travelshare.model.post.PicturePost;
@@ -30,7 +32,9 @@ import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.Marker;
 
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 
 public class MapFragment extends Fragment {
@@ -70,6 +74,19 @@ public class MapFragment extends Fragment {
                         PUBLISH_DATE
                         AUTHOR
                         LOCATION_NAME*/
+                    Timestamp timestamp = post.getDate();
+                    String dateStr = "";
+
+                    if (timestamp != null) {
+                        try {
+                            Date date = timestamp.toDate();
+                            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+                            dateStr = sdf.format(date);
+                        }
+                        catch (Exception e) {
+                            dateStr = "1970-01-01";
+                        }
+                    }
 
                     Intent intent = new Intent(MapFragment.this.getContext(), CardViewActivity.class);
 
@@ -78,8 +95,9 @@ public class MapFragment extends Fragment {
                     intent.putExtra("FULL_TEXT_INSTRUCTIONS", post.getInstructions());
                     intent.putExtra("COUNT_LIKES", 0);
                     intent.putExtra("COUNT_DISLIKES", 0);
-                    intent.putExtra("IS_PUBLIC", post.isVisible());
-                    intent.putExtra("PUBLISH_DATE", post.getDate());
+                    intent.putExtra("IS_PUBLIC", post.getVisibility());
+                    intent.putExtra("PUBLISH_DATE", dateStr);
+                    intent.putExtra("LOCATION_NAME", post.getLocation().getName());
                     intent.putExtra("AUTHOR", post.getAuthorId());
 
                     startActivity(intent);

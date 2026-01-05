@@ -17,6 +17,7 @@ import com.bumptech.glide.Glide;
 import com.travel.travelshare.R;
 import com.travel.travelshare.ui.elements.ReturnBarFragment;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
@@ -41,11 +42,11 @@ public class CardViewActivity extends AppCompatActivity implements ReturnBarFrag
     private int count_likes;
     private int count_dislikes;
     private boolean is_public;
-    private LocalDateTime date;
+    private LocalDate date;
     private String author;
     private String location;
 
-    private static String getFormattedDate(LocalDateTime date) {
+    private static String getFormattedDate(LocalDate date) {
         // 1. Format the first part: "Wednesday, November"
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEEE, MMMM", Locale.US);
         String dayMonth = date.format(formatter);
@@ -114,10 +115,10 @@ public class CardViewActivity extends AppCompatActivity implements ReturnBarFrag
         }
 
         try {
-            this.date = LocalDateTime.parse(dateStr, DateTimeFormatter.ISO_DATE);
+            this.date = LocalDate.parse(dateStr, DateTimeFormatter.ISO_DATE);
         }
         catch (Exception exception) {
-            this.date = LocalDateTime.of(1970, 01, 01, 0, 0, 0);
+            this.date = LocalDate.of(1970, 01, 01);
         }
 
         this.author =  getIntent().getStringExtra("AUTHOR");
