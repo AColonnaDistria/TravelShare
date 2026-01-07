@@ -3,6 +3,8 @@ package com.travel.travelshare.ui.publish;
 import android.icu.text.SimpleDateFormat;
 import android.net.Uri;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -30,6 +32,8 @@ import androidx.activity.result.contract.ActivityResultContracts;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.Locale;
@@ -37,30 +41,16 @@ import java.util.Locale;
 public class PublishFragment extends Fragment {
     private FragmentPublishBinding binding;
 
-    private ImageView publishPhotoView;
-    private MaterialButton takePhotoButton;
-    private MaterialButton uploadButton;
-
-    private TextInputEditText dateEditText;
-    private TextInputEditText descriptionEditText;
-    private TextInputEditText instructionsEditText;
-    private TextInputEditText locationEditText;
-
-    private Button publishButton;
-    private MaterialButton visibilityPublicToggleButton;
-    private MaterialButton visibilityPrivateToggleButton;
     private ActivityResultLauncher<Uri> takePictureLauncher;
     private ActivityResultLauncher<androidx.activity.result.PickVisualMediaRequest> pickMediaLauncher;
-    private PublishViewModel mViewModel;
-    private Uri imageUri;
 
-    PostRepository postRepository;
+    private PublishViewModel mViewModel;
+    private static final DateTimeFormatter DATE_FORMATTER =
+            DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        this.postRepository = new PostRepository();
 
         this.mViewModel = new ViewModelProvider(this).get(PublishViewModel.class);
 
@@ -71,35 +61,17 @@ public class PublishFragment extends Fragment {
 
                 Log.v("LOG", "CAMERA_SUCCESS");
                 Log.v("LOG", this.mViewModel.getPhotoURI().getValue().toString());
-
-                if (mViewModel.getPhotoURI().getValue() != null) {
-                    // Remove tint
-                    binding.publishImageCardview.setImageTintList(null);
-
-                    this.imageUri = PublishFragment.this.mViewModel.getPhotoURI().getValue();
-
-                    Glide.with(this)
-                            .load(this.mViewModel.getPhotoURI().getValue()) // <--- Use the field here
-                            .into(binding.publishImageCardview);
-                }
-
             } else {
                 Log.v("LOG", "CAMERA_FAILED");
                 // User cancelled or camera failed
             }
         });
 
-
         this.pickMediaLauncher = registerForActivityResult(new ActivityResultContracts.PickVisualMedia(), uri -> {
             if (uri != null) {
-                Log.v("LOG", "GALLERY_SUCCESS");
-                Log.v("LOG", this.mViewModel.getPhotoURI().getValue().toString());
                 mViewModel.setPhotoURI(uri);
                 // Remove tint
                 binding.publishImageCardview.setImageTintList(null);
-
-                this.imageUri = PublishFragment.this.mViewModel.getPhotoURI().getValue();
-
                 Glide.with(this)
                         .load(this.mViewModel.getPhotoURI().getValue()) // <--- Use the field here
                         .into(binding.publishImageCardview);
@@ -115,167 +87,146 @@ public class PublishFragment extends Fragment {
         binding = FragmentPublishBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
 
-        this.publishPhotoView = binding.publishImageCardview;
-        this.takePhotoButton = binding.publishTakePhotoButton;
-        this.uploadButton = binding.publishUploadButton;
+        binding.publishEditDate.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void afterTextChanged(Editable s) {
+                String text = s.toString();
 
-        this.dateEditText = binding.publishEditDate;
-        this.descriptionEditText = binding.publishEditDescription;
-        this.instructionsEditText = binding.publishEditInstructions;
-        this.locationEditText = binding.publishEditLocation;
+                if (text.length() != 10) return; // dd/MM/yyyy = 10 chars
 
-        this.publishButton = binding.publishButton;
+                try {
+                    DateTimeFormatter DATE_FORMATTER;
+                    LocalDate date = LocalDate.parse(text, PublishFragment.DATE_FORMATTER);
+                    mViewModel.setDate(date.atStartOfDay());
+                } catch (Exception e) {
+                    // Invalid date -> ignore
+                }
+            }
 
-        this.visibilityPublicToggleButton = binding.publicToggleButton;
-        this.visibilityPrivateToggleButton = binding.privateToggleButton;
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+        });
 
-        this.uploadButton.setOnClickListener(new View.OnClickListener() {
+        binding.publishEditDescription.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void afterTextChanged(Editable s) {
+                mViewModel.setDescription(s.toString());
+            }
+
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+        });
+
+        binding.publishEditInstructions.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void afterTextChanged(Editable s) {
+                mViewModel.setInstructions(s.toString());
+            }
+
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+        });
+
+        binding.publishEditLocation.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void afterTextChanged(Editable s) {
+                mViewModel.setLocation(s.toString());
+            }
+
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+        });
+
+        binding.publishUploadButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                PublishFragment.this.mViewModel.setPhotoURI(createPhotoUri());
+                PublishFragment.this.mViewModel.setPhotoURI(PublishFragment.this.mViewModel.createPhotoUri(getContext()));
                 PublishFragment.this.pickMediaLauncher.launch(new androidx.activity.result.PickVisualMediaRequest.Builder()
                         .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly.INSTANCE)
                         .build());
             }
         });
 
-        this.takePhotoButton.setOnClickListener(new View.OnClickListener() {
+        binding.publishTakePhotoButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                PublishFragment.this.mViewModel.setPhotoURI(createPhotoUri());
+                PublishFragment.this.mViewModel.setPhotoURI(PublishFragment.this.mViewModel.createPhotoUri(getContext()));
                 PublishFragment.this.takePictureLauncher.launch(PublishFragment.this.mViewModel.getPhotoURI().getValue());
             }
         });
 
-        this.visibilityPublicToggleButton.setOnClickListener(new View.OnClickListener() {
+        binding.publicToggleButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 PublishFragment.this.mViewModel.setVisibility(true); // set to PUBLIC
             }
         });
 
-        this.visibilityPrivateToggleButton.setOnClickListener(new View.OnClickListener() {
+        binding.privateToggleButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 PublishFragment.this.mViewModel.setVisibility(false); // set to PUBLIC
             }
         });
 
-        this.publishButton.setOnClickListener(new View.OnClickListener() {
+        binding.publishButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 // Save image publication
-                PublishFragment.this.saveImagePublication();
+                PublishFragment.this.mViewModel.saveImagePublication();
             }
         });
 
-        if (this.mViewModel.getPhotoURI().getValue() != null) {
-            this.imageUri = this.mViewModel.getPhotoURI().getValue();
-
-            // 1. REMOVE THE GRAY TINT
+        this.mViewModel.getPhotoURI().observe(this.getViewLifecycleOwner(), uri -> {
             binding.publishImageCardview.setImageTintList(null);
 
-            // 2. Load the image
             Glide.with(this)
-                    .load(mViewModel.getPhotoURI().getValue())
+                    .load(uri)
                     .centerCrop()
                     .into(binding.publishImageCardview);
-        }
+        });
 
-        if (this.mViewModel.getVisibility().getValue() != null) {
-            boolean is_public = this.mViewModel.getVisibility().getValue();
+        this.mViewModel.getVisibility().observe(this.getViewLifecycleOwner(), is_public -> {
+            if (is_public != binding.publicToggleButton.isChecked()) {
+                binding.publicToggleButton.setChecked(is_public);
+            }
+            if (!is_public != binding.privateToggleButton.isChecked()) {
+                binding.privateToggleButton.setChecked(!is_public);
+            }
+        });
 
-            this.visibilityPublicToggleButton.setChecked(is_public);
-            this.visibilityPrivateToggleButton.setChecked(!is_public);
-        }
+        /*
+        this.mViewModel.getDate().observe(this.getViewLifecycleOwner(), date -> {
+            String dateAsString = DateTimeFormatter.ofPattern("dd/MM/yyyy").format(date);
 
-        if (this.mViewModel.getDate().getValue() != null) {
-            String dateAsString = DateTimeFormatter.ofPattern("dd/MM/yyyy").format(this.mViewModel.getDate().getValue());
+            if (!dateAsString.equals(binding.publishEditDate.getText().toString())) {
+                binding.publishEditDate.setText(dateAsString);
+            }
+        });
 
-            this.dateEditText.setText(dateAsString);
-        }
+         */
 
-        if (this.mViewModel.getDescription().getValue() != null) {
-            this.descriptionEditText.setText(this.mViewModel.getDescription().getValue());
-        }
+        this.mViewModel.getDescription().observe(this.getViewLifecycleOwner(), description -> {
+            if (!description.equals(binding.publishEditDescription.getText().toString())) {
+                binding.publishEditDescription.setText(description);
+            }
+        });
 
-        if (this.mViewModel.getLocation().getValue() != null) {
-            this.locationEditText.setText(this.mViewModel.getLocation().getValue());
-        }
+        this.mViewModel.getLocation().observe(this.getViewLifecycleOwner(), location -> {
+            if (!location.equals(binding.publishEditLocation.getText().toString())) {
+                binding.publishEditLocation.setText(this.mViewModel.getLocation().getValue());
+            }
+        });
 
         return root;
-    }
-
-    private void saveImagePublication() {
-        Uri imageUri = this.imageUri;
-        if (imageUri == null) {
-            Log.e("PublishFragment", "No image selected!");
-            return; // or show a Toast to user
-        }
-
-        boolean visibility = this.visibilityPublicToggleButton.isChecked();
-
-        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
-        Timestamp timestamp;
-        try {
-            Date dt = sdf.parse(this.dateEditText.getText().toString());
-            timestamp = new Timestamp(dt);
-        } catch (Exception e) {
-            timestamp = new Timestamp(0, 0);
-        }
-
-        Timestamp date = timestamp;
-        String description = this.descriptionEditText.getText().toString();
-        String instructions = this.instructionsEditText.getText().toString();
-        Location location = new ApproximateLocation(
-                this.locationEditText.getText().toString(),
-                "city",
-                "region",
-                "country",
-                0.0,
-                0.0,
-                "s0000"
-        );
-
-        Timestamp createdAt = Timestamp.now();
-
-        PicturePost picturePost = new PicturePost(
-            "author",
-            imageUri.toString(),
-            description,
-            instructions,
-            date,
-            createdAt,
-            visibility,
-            location
-        );
-
-        this.postRepository.putItem(picturePost, imageUri);
-    }
-
-    private Uri createPhotoUri() {
-        try {
-            String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(new Date());
-            String imageFileName = "JPEG_" + timeStamp + "_";
-            File storageDir = requireContext().getExternalCacheDir();
-
-            File imageFile = File.createTempFile(
-                    imageFileName,  /* prefix */
-                    ".jpg",         /* suffix */
-                    storageDir      /* directory */
-            );
-
-            // Convert File to Uri using FileProvider
-            return FileProvider.getUriForFile(
-                    requireContext(),
-                    requireContext().getPackageName() + ".fileprovider",
-                    imageFile
-            );
-
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
-        }
     }
 
     @Override

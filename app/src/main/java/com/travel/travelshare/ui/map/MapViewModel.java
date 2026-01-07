@@ -18,12 +18,23 @@ public class MapViewModel extends ViewModel {
 
     private final MutableLiveData<String> mText;
 
+    private PostRepository postRepository;
+    public MutableLiveData<List<PicturePost>> mPosts = new MutableLiveData<>();
+
     public MapViewModel() {
         mText = new MutableLiveData<>();
         mText.setValue("This is a map fragment");
+
+        this.postRepository = new PostRepository();
     }
 
     public LiveData<String> getText() {
         return mText;
+    }
+
+    public void loadPosts() {
+        postRepository.getAll(posts -> {
+            mPosts.setValue(posts);
+        });
     }
 }

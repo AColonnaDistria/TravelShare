@@ -42,10 +42,8 @@ public class MapFragment extends Fragment {
     private FragmentMapBinding binding;
     private MapView map;
     private IMapController mapController;
-
     private MapViewModel mViewModel;
-
-    private PostRepository postRepository;
+    private static double ZOOM_LEVEL_PICTURE_POST_TRIGGER = 15.0;
 
     private void addMarkersToMap(List<PicturePost> posts) {
         map.getOverlays().clear();
@@ -112,37 +110,8 @@ public class MapFragment extends Fragment {
         map.invalidate();
     }
 
-    private static double ZOOM_LEVEL_PICTURE_POST_TRIGGER = 15.0;
-
-    private void refreshMap() {
-        this.postRepository.getAll(new OnSuccessListener<List<PicturePost>>() {
-            @Override
-            public void onSuccess(List<PicturePost> picturePosts) {
-                addMarkersToMap(picturePosts);
-            }
-        });
-
-        /*
-        double zoom = map.getZoomLevelDouble();
-        double latCenter = map.getMapCenter().getLatitude();
-        double lonCenter = map.getMapCenter().getLongitude();
-
-        double radiusInMeters = 10000.0;
-
-        this.postRepository.getNearby(latCenter, lonCenter, radiusInMeters, new OnSuccessListener<List<PicturePost>>() {
-            @Override
-            public void onSuccess(List<PicturePost> picturePosts) {
-                addMarkersToMap(picturePosts);
-            }
-        });
-
-         */
-    }
-
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
-        this.postRepository = new PostRepository();
-
         this.mViewModel = new ViewModelProvider(this).get(MapViewModel.class);
 
         binding = FragmentMapBinding.inflate(inflater, container, false);
@@ -166,7 +135,7 @@ public class MapFragment extends Fragment {
                 // Get the new zoom level
                 double zoom = event.getZoomLevel();
                 if (zoom >= MapFragment.ZOOM_LEVEL_PICTURE_POST_TRIGGER) {
-                    refreshMap();
+                    mViewModel.loadPosts();
                     return true;
                 }
                 return false;
@@ -176,7 +145,7 @@ public class MapFragment extends Fragment {
             public boolean onScroll(ScrollEvent event) {
                 double zoom = map.getZoomLevelDouble();
                 if (zoom >= MapFragment.ZOOM_LEVEL_PICTURE_POST_TRIGGER) {
-                    refreshMap();
+                    mViewModel.loadPosts();
                     return true;
                 }
 
@@ -184,16 +153,8 @@ public class MapFragment extends Fragment {
             }
         }, 200));
 
-        refreshMap();
-
-        /*
-        this.postRepository.getAll(new OnSuccessListener<List<PicturePost>>() {
-            @Override
-            public void onSuccess(List<PicturePost> picturePosts) {
-                addMarkersToMap(picturePosts);
-            }
-        });
-        */
+        this.mViewModel.mPosts.observe(this.getViewLifecycleOwner(), this::addMarkersToMap);
+        this.mViewModel.loadPosts();
 
         return root;
     }
