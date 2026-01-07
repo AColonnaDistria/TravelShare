@@ -51,6 +51,20 @@ public class PostRepository {
                 });
     }
 
+    public void getPage(OnSuccessListener<List<PicturePost>> listener, int pageSize, int pageNumber) {
+        this.database.collection(PostRepository.collectionPath)
+                .orderBy("id")
+                .startAt(pageSize * pageNumber)
+                .get()
+                .addOnSuccessListener(querySnapshot -> {
+                    List<PicturePost> posts = querySnapshot.getDocuments().stream().map(documentSnapshot -> {
+                        return documentSnapshot.toObject(PicturePost.class);
+                    }).collect(Collectors.toList());
+
+                    listener.onSuccess(posts);
+                });
+    }
+
     public void getNearby(double latCenter, double longCenter, double radiusInMeters, OnSuccessListener<List<PicturePost>> listener) {
         GeoLocation center = new GeoLocation(latCenter, longCenter);
 

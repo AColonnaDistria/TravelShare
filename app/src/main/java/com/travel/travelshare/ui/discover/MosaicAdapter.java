@@ -1,5 +1,6 @@
 package com.travel.travelshare.ui.discover;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -15,10 +16,13 @@ import java.util.List;
 
 public class MosaicAdapter extends RecyclerView.Adapter<MosaicViewHolder> {
     private List<String> imageList = null;
+    private ArrayList<String> imagePostIds = null;
     private OnItemClickListener listener;
 
+    public static int CHUNK_SIZE = 16;
+
     public interface OnItemClickListener {
-        void onItemClick(String imagePath, int position);
+        void onItemClick(String postId);
     }
     public void setOnItemClickListener(OnItemClickListener listener) {
         this.listener = listener;
@@ -26,24 +30,15 @@ public class MosaicAdapter extends RecyclerView.Adapter<MosaicViewHolder> {
 
     public MosaicAdapter() {
         this.imageList = new ArrayList<>();
+        this.imagePostIds = new ArrayList<>();
+    }
 
-        // Adding dummy data so you can see the grid immediately.
-        imageList.add("file:///android_asset/stock_image_1.png");
-        imageList.add("file:///android_asset/stock_image_2.png");
-        imageList.add("file:///android_asset/stock_image_3.png");
-        imageList.add("file:///android_asset/stock_image_4.png");
-        imageList.add("file:///android_asset/stock_image_1.png");
-        imageList.add("file:///android_asset/stock_image_2.png");
-        imageList.add("file:///android_asset/stock_image_3.png");
-        imageList.add("file:///android_asset/stock_image_4.png");
-        imageList.add("file:///android_asset/stock_image_1.png");
-        imageList.add("file:///android_asset/stock_image_2.png");
-        imageList.add("file:///android_asset/stock_image_3.png");
-        imageList.add("file:///android_asset/stock_image_4.png");
-        imageList.add("file:///android_asset/stock_image_1.png");
-        imageList.add("file:///android_asset/stock_image_2.png");
-        imageList.add("file:///android_asset/stock_image_3.png");
-        imageList.add("file:///android_asset/stock_image_4.png");
+    public void addImages(List<String> images, List<String> postIds) {
+        int startPos = imageList.size();
+        this.imageList.addAll(images);
+        this.imagePostIds.addAll(postIds);
+
+        notifyItemRangeInserted(startPos, images.size());
     }
 
     @NonNull
@@ -55,7 +50,7 @@ public class MosaicAdapter extends RecyclerView.Adapter<MosaicViewHolder> {
     }
 
     @Override
-    public void onBindViewHolder(@NonNull MosaicViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull MosaicViewHolder holder, @SuppressLint("RecyclerView") int position) {
         String imagePath = imageList.get(position);
 
         holder.show(imagePath);
@@ -63,7 +58,7 @@ public class MosaicAdapter extends RecyclerView.Adapter<MosaicViewHolder> {
             @Override
             public void onClick(View v) {
                 if (listener != null) {
-                    listener.onItemClick(imagePath, position);
+                    listener.onItemClick(imagePostIds.get(position));
                 }
             }
         });
