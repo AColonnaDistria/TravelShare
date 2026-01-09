@@ -51,18 +51,23 @@ public class PostRepository {
                 });
     }
 
-    public void getPage(OnSuccessListener<List<PicturePost>> listener, int pageSize, int pageNumber) {
-        this.database.collection(PostRepository.collectionPath)
-                .orderBy("id")
-                .startAt(pageSize * pageNumber)
-                .get()
-                .addOnSuccessListener(querySnapshot -> {
-                    List<PicturePost> posts = querySnapshot.getDocuments().stream().map(documentSnapshot -> {
-                        return documentSnapshot.toObject(PicturePost.class);
-                    }).collect(Collectors.toList());
+    public void getPage(OnSuccessListener<List<PicturePost>> listener, int pageSize, String lastId) {
+        Query query = this.database.collection(PostRepository.collectionPath)
+                .orderBy("id") // Must be ordered by the same field we use for the cursor
+                .limit(pageSize);
 
-                    listener.onSuccess(posts);
-                });
+        // If lastId is not null, start the new fetch AFTER that ID
+        if (lastId != null && !lastId.isEmpty()) {
+            query = query.startAfter(lastId);
+        }
+
+        query.get().addOnSuccessListener(querySnapshot -> {
+            List<PicturePost> posts = querySnapshot.getDocuments().stream().map(documentSnapshot -> {
+                return documentSnapshot.toObject(PicturePost.class);
+            }).collect(Collectors.toList());
+
+            listener.onSuccess(posts);
+        });
     }
 
     public void getNearby(double latCenter, double longCenter, double radiusInMeters, OnSuccessListener<List<PicturePost>> listener) {
@@ -93,7 +98,11 @@ public class PostRepository {
                             if (task.isSuccessful()) {
                                 QuerySnapshot snap = task.getResult();
                                 for (DocumentSnapshot doc : snap.getDocuments()) {
-                                    posts.add(doc.toObject(PicturePost.class));
+                                    GeoLocation docLocation = new GeoLocation(latCenter, longCenter);
+                                    double distanceInMeters = GeoFireUtils.getDistanceBetween(docLocation, center);
+                                    if (distanceInMeters <= radiusInMeters) {
+                                        posts.add(doc.toObject(PicturePost.class));
+                                    }
                                 }
                             }
                         }

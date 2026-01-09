@@ -11,6 +11,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
@@ -31,9 +32,14 @@ import java.util.stream.Collectors;
 public class DiscoverFragment extends Fragment {
 
     private FragmentDiscoverBinding binding;
+    private MosaicAdapter mosaicAdapter;
+    PostRepository postRepository;
+    private String lastId = null;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
+        postRepository = new PostRepository();
+
         DiscoverViewModel dashboardViewModel = new ViewModelProvider(this).get(DiscoverViewModel.class);
 
         binding = FragmentDiscoverBinding.inflate(inflater, container, false);
@@ -46,8 +52,7 @@ public class DiscoverFragment extends Fragment {
         recyclerView.setLayoutManager(layoutManager);
         recyclerView.setHasFixedSize(true);
 
-        MosaicAdapter mosaicAdapter = new MosaicAdapter();
-        PostRepository postRepository = new PostRepository();
+        this.mosaicAdapter = new MosaicAdapter();
 
         mosaicAdapter.setOnItemClickListener(postId -> {
             postRepository.getItem(
@@ -86,19 +91,61 @@ public class DiscoverFragment extends Fragment {
             });
         });
 
+        recyclerView.setAdapter(mosaicAdapter);
+
+        recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
+
+                StaggeredGridLayoutManager layoutManager = (StaggeredGridLayoutManager) recyclerView.getLayoutManager();
+                if (layoutManager == null) return;
+
+                int visibleItemCount = layoutManager.getChildCount();
+                int totalItemCount = layoutManager.getItemCount();
+
+                // FIX 2: Staggered handles multiple columns, so it returns an array
+                int[] firstVisibleItemPositions = layoutManager.findFirstVisibleItemPositions(null);
+                int firstVisibleItemPosition = firstVisibleItemPositions[0];
+
+                if ((visibleItemCount + firstVisibleItemPosition) >= totalItemCount - 5
+                        && totalItemCount > 0) {
+                    // Fetch another page
+                    fetchNextPage();
+                }
+            }
+        });
+
+        this.lastId = null;
+        this.fetchNextPage();
+
+        return root;
+    }
+
+    private boolean isLoading = false;
+    private boolean isLastPage = false;
+    private void fetchNextPage() {
+        if (isLoading || isLastPage) return;
+
+        isLoading = true;
+
         postRepository.getPage(new OnSuccessListener<List<PicturePost>>() {
             @Override
             public void onSuccess(List<PicturePost> picturePosts) {
-                List<String> imageUris = picturePosts.stream().map(post -> post.getPhoto_URI()).collect(Collectors.toList());
-                List<String> imagePostIds = picturePosts.stream().map(post -> post.getId()).collect(Collectors.toList());
+                if (picturePosts == null || picturePosts.isEmpty()) {
+                    isLastPage = true;
+                }
+                else {
+                    List<String> imageUris = picturePosts.stream().map(post -> post.getPhoto_URI()).collect(Collectors.toList());
+                    List<String> imagePostIds = picturePosts.stream().map(post -> post.getId()).collect(Collectors.toList());
 
-                mosaicAdapter.addImages(imageUris, imagePostIds);
+                    mosaicAdapter.addImages(imageUris, imagePostIds);
+
+                    lastId = imagePostIds.get(imagePostIds.size() - 1);
+                }
+                isLoading = false;
             }
-        }, 16, 0);
-
-        recyclerView.setAdapter(mosaicAdapter);
-
-        return root;
+        }, 16, lastId);
     }
 
     @Override
