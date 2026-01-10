@@ -3,7 +3,6 @@ package com.travel.travelshare;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -12,6 +11,7 @@ import android.widget.ImageView;
 import android.widget.PopupMenu;
 import android.widget.TextView;
 
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -20,19 +20,21 @@ import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
+import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.travel.travelshare.ui.auth.AuthActivity;
 import com.travel.travelshare.databinding.ActivityMainBinding;
+import com.travel.travelshare.model.user.GuestUser;
+import com.travel.travelshare.model.user.User;
+import com.travel.travelshare.model.user.UserType;
 import com.travel.travelshare.repositories.Storage;
+import com.travel.travelshare.repositories.UserRepository;
 import com.travel.travelshare.ui.cardview.CardViewActivity;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.osmdroid.config.Configuration;
-import org.osmdroid.library.BuildConfig;
-
-import com.cloudinary.android.MediaManager;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -42,6 +44,9 @@ public class MainActivity extends AppCompatActivity {
     private ImageView profileButton;
     private ImageView notificationButton;
     private NavController navController;
+
+    private FirebaseAuth mAuth;
+    private User activeUser; // Votre classe modèle
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -100,47 +105,106 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        this.mAuth = FirebaseAuth.getInstance();
 
-        FirebaseAuth.getInstance().signInAnonymously()
-            .addOnSuccessListener(authResult -> {
-                Log.d("Auth", "Signed in as: " + authResult.getUser().getUid());
-            })
-            .addOnFailureListener(e -> {
-                Log.e("Auth", "Sign in failed", e);
-            });
+        this.mAuth.signInAnonymously().addOnCompleteListener(this, task -> {
+            if (task.isSuccessful()) {
+                FirebaseUser fbUser = mAuth.getCurrentUser();
+                // Créer votre objet User selon votre schéma (Guest par défaut)
+                UserRepository userRepo = new UserRepository();
 
+                userRepo.getItem(fbUser.getUid(), new OnSuccessListener<User>() {
+                    @Override
+                    public void onSuccess(User user) {
+                        if (user == null) {
+                            activeUser = new GuestUser(fbUser.getUid(), Timestamp.now());
+                            userRepo.putItem(activeUser);
+                        }
+                        else {
+                            activeUser = user;
+                        }
+                    }
+                });
+            }
+            else {
+                Log.v("[UNAUTHORIZED]", "Anonymous sign in did not work");
+            }
+        });
     }
 
     private void showProfileMenu(View anchorView) {
         PopupMenu popup = new PopupMenu(this, anchorView);
 
-        popup.getMenuInflater().inflate(R.menu.profile_menu, popup.getMenu());
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            popup.setForceShowIcon(true);
-        }
-
-        popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
-            @Override
-            public boolean onMenuItemClick(MenuItem item) {
-                int id = item.getItemId();
-
-                if (id == R.id.action_profile) {
-                    // Handle Open Profile
-                    return true;
-                }
-                else if (id == R.id.action_groups) {
-                    // Handle Groups logic
-                    return true;
-                }
-                else if (id == R.id.action_likes) {
-                    // Handle Likes logic
-                    return true;
-                }
-                return false;
+        if (activeUser.getUserType() == UserType.GUEST) {
+            popup.getMenuInflater().inflate(R.menu.guest_profile_menu, popup.getMenu());
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                popup.setForceShowIcon(true);
             }
-        });
 
-        popup.show();
+            popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+                @Override
+                public boolean onMenuItemClick(MenuItem item) {
+                    int id = item.getItemId();
+
+                    if (id == R.id.action_likes) {
+                        // Handle Likes
+                        return true;
+                    }
+                    else if (id == R.id.action_signup) {
+                        // Handle Signup logic
+
+                        Intent intent = new Intent(MainActivity.this, AuthActivity.class);
+                        intent.putExtra("START_DESTINATION", "register");
+
+                        startActivity(intent);
+
+                        return true;
+                    }
+                    else if (id == R.id.action_login) {
+                        // Handle Login logic
+
+                        Intent intent = new Intent(MainActivity.this, AuthActivity.class);
+                        intent.putExtra("START_DESTINATION", "login");
+
+                        startActivity(intent);
+
+                        return true;
+                    }
+                    return false;
+                }
+            });
+
+            popup.show();
+        }
+        else {
+            popup.getMenuInflater().inflate(R.menu.profile_menu, popup.getMenu());
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                popup.setForceShowIcon(true);
+            }
+
+            popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+                @Override
+                public boolean onMenuItemClick(MenuItem item) {
+                    int id = item.getItemId();
+
+                    if (id == R.id.action_profile) {
+                        // Handle Open Profile
+                        return true;
+                    }
+                    else if (id == R.id.action_groups) {
+                        // Handle Groups logic
+                        return true;
+                    }
+                    else if (id == R.id.action_likes) {
+                        // Handle Likes logic
+                        return true;
+                    }
+                    return false;
+                }
+            });
+
+            popup.show();
+        }
     }
 
     private void showNotificationMenu(View anchorView) {

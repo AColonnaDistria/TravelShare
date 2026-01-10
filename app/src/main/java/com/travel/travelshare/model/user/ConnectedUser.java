@@ -17,8 +17,8 @@ public class ConnectedUser extends User {
         super(UserType.CONNECTED);
     }
 
-    public ConnectedUser(String userId, String username, String email, Timestamp createdAt) {
-        super(userId, createdAt, UserType.CONNECTED);
+    public ConnectedUser(String username, String firebaseUid, String email, Timestamp createdAt) {
+        super(username, firebaseUid, createdAt, UserType.CONNECTED);
 
         this.username = username;
         this.email = email;

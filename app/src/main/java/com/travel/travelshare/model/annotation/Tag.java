@@ -30,6 +30,6 @@ public class Tag implements FollowableContent, DatabaseItem {
 
     @Override
     public void setId(String id) {
-
+        this.tagId = id;
     }
 }

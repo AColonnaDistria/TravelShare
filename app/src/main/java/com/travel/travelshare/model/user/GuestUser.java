@@ -6,6 +6,6 @@ public class GuestUser extends User {
     public GuestUser() {}
 
     public GuestUser(String userId, Timestamp createdAt) {
-        super(userId, createdAt, UserType.GUEST);
+        super(userId, userId, createdAt, UserType.GUEST);
     }
 }
