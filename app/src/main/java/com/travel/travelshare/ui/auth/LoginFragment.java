@@ -14,6 +14,7 @@ import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.travel.travelshare.MainActivity;
 import com.travel.travelshare.R;
 import com.travel.travelshare.databinding.FragmentLoginBinding;
 import com.travel.travelshare.model.user.UserType;
@@ -83,6 +84,9 @@ public class LoginFragment extends Fragment {
                 Toast.makeText(getContext(), "Successful connection", Toast.LENGTH_SHORT).show();
 
                 if (getActivity() != null) {
+                    if (getActivity().getClass() == MainActivity.class) {
+                        ((MainActivity)(getActivity())).reloadUser();
+                    }
                     getActivity().finish();
                 }
             }

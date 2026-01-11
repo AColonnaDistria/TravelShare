@@ -10,6 +10,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.travel.travelshare.R;
+import com.travel.travelshare.model.post.PicturePost;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,6 +40,15 @@ public class MosaicAdapter extends RecyclerView.Adapter<MosaicViewHolder> {
         this.imagePostIds.addAll(postIds);
 
         notifyItemRangeInserted(startPos, images.size());
+    }
+
+    public void addPosts(List<PicturePost> posts) {
+        int startPos = imageList.size();
+
+        for (PicturePost post : posts) {
+            this.imageList.add(post.getPhoto_URI());
+            this.imagePostIds.add(post.getId());
+        }
     }
 
     @NonNull
