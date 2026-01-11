@@ -115,7 +115,6 @@ public class RegisterFragment extends Fragment {
 
         Toast.makeText(getContext(), "Compte créé avec succès !", Toast.LENGTH_SHORT).show();
 
-        // Fermeture de l'AuthActivity pour revenir à la MainActivity
         if (getActivity() != null) {
             getActivity().finish();
         }

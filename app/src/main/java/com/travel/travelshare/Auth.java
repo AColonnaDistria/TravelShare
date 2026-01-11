@@ -36,13 +36,23 @@ public class Auth {
         void onReload(User activeUser);
     }
 
+    public interface AuthLoginCallback {
+        void onSuccess(User activeUser);
+        void onFailure();
+    }
+
+
     public void reload(AuthReloadCallback callback) {
         this.firebaseUser = this.mAuth.getCurrentUser();
         if (this.firebaseUser == null) {
-            this.signInAnonymously(user -> {
-                activeUser = user;
+            this.signInAnonymously(new AuthLoginCallback() {
+                @Override
+                public void onSuccess(User activeUser) {
+                    callback.onReload(activeUser);
+                }
 
-                callback.onReload(activeUser);
+                @Override
+                public void onFailure() {}
             });
         }
         else {
@@ -66,9 +76,19 @@ public class Auth {
         this.mAuth.signOut();
     }
 
-    public void signInAnonymously(AuthReloadCallback callback) {
-        this.mAuth.signInAnonymously().addOnCompleteListener(task -> {
-            this.reload(callback);
+    public void signInAnonymously(AuthLoginCallback callback) {
+        this.mAuth.signInAnonymously().addOnSuccessListener(task -> {
+            this.reload(callback::onSuccess);
+        }).addOnFailureListener(task -> {
+            callback.onFailure();
+        });
+    }
+
+    public void signInWithEmailAndPassword(String email, String password, AuthLoginCallback callback) {
+        this.mAuth.signInWithEmailAndPassword(email, password).addOnSuccessListener(task -> {
+            this.reload(callback::onSuccess);
+        }).addOnFailureListener(task -> {
+            callback.onFailure();
         });
     }
 
