@@ -33,14 +33,11 @@ public class DiscoverFragment extends Fragment {
 
     private FragmentDiscoverBinding binding;
     private MosaicAdapter mosaicAdapter;
-    PostRepository postRepository;
-    private String lastId = null;
+    private DiscoverViewModel mViewModel;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
-        postRepository = new PostRepository();
-
-        DiscoverViewModel dashboardViewModel = new ViewModelProvider(this).get(DiscoverViewModel.class);
+        this.mViewModel = new ViewModelProvider(this).get(DiscoverViewModel.class);
 
         binding = FragmentDiscoverBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
@@ -55,39 +52,34 @@ public class DiscoverFragment extends Fragment {
         this.mosaicAdapter = new MosaicAdapter();
 
         mosaicAdapter.setOnItemClickListener(postId -> {
-            postRepository.getItem(
-                    postId,
-                    new OnSuccessListener<PicturePost>() {
-                @Override
-                public void onSuccess(PicturePost post) {
-                    Timestamp timestamp = post.getDate();
-                    String dateStr = "";
+            this.mViewModel.fetchPost(postId, post -> {
+                Timestamp timestamp = post.getDate();
+                String dateStr = "";
 
-                    if (timestamp != null) {
-                        try {
-                            Date date = timestamp.toDate();
-                            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-                            dateStr = sdf.format(date);
-                        }
-                        catch (Exception e) {
-                            dateStr = "1970-01-01";
-                        }
+                if (timestamp != null) {
+                    try {
+                        Date date = timestamp.toDate();
+                        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+                        dateStr = sdf.format(date);
                     }
-
-                    Intent intent = new Intent(getContext(), CardViewActivity.class);
-
-                    intent.putExtra("IMAGE_PATH", post.getPhoto_URI());
-                    intent.putExtra("FULL_TEXT_DESCRIPTION", post.getDescription());
-                    intent.putExtra("FULL_TEXT_INSTRUCTIONS", post.getInstructions());
-                    intent.putExtra("COUNT_LIKES", 0);
-                    intent.putExtra("COUNT_DISLIKES", 0);
-                    intent.putExtra("IS_PUBLIC", post.getVisibility());
-                    intent.putExtra("PUBLISH_DATE", dateStr);
-                    intent.putExtra("LOCATION_NAME", post.getLocation().getName());
-                    intent.putExtra("AUTHOR", post.getAuthorId());
-
-                    startActivity(intent);
+                    catch (Exception e) {
+                        dateStr = "1970-01-01";
+                    }
                 }
+
+                Intent intent = new Intent(getContext(), CardViewActivity.class);
+
+                intent.putExtra("IMAGE_PATH", post.getPhoto_URI());
+                intent.putExtra("FULL_TEXT_DESCRIPTION", post.getDescription());
+                intent.putExtra("FULL_TEXT_INSTRUCTIONS", post.getInstructions());
+                intent.putExtra("COUNT_LIKES", 0);
+                intent.putExtra("COUNT_DISLIKES", 0);
+                intent.putExtra("IS_PUBLIC", post.getVisibility());
+                intent.putExtra("PUBLISH_DATE", dateStr);
+                intent.putExtra("LOCATION_NAME", post.getLocation().getName());
+                intent.putExtra("AUTHOR", post.getAuthorId());
+
+                startActivity(intent);
             });
         });
 
@@ -115,37 +107,18 @@ public class DiscoverFragment extends Fragment {
                 }
             }
         });
-
-        this.lastId = null;
         this.fetchNextPage();
 
         return root;
     }
 
-    private boolean isLoading = false;
-    private boolean isLastPage = false;
     private void fetchNextPage() {
-        if (isLoading || isLastPage) return;
+        this.mViewModel.fetchNextPage(picturePosts -> {
+            List<String> imageUris = picturePosts.stream().map(post -> post.getPhoto_URI()).collect(Collectors.toList());
+            List<String> imagePostIds = picturePosts.stream().map(post -> post.getId()).collect(Collectors.toList());
 
-        isLoading = true;
-
-        postRepository.getPage(new OnSuccessListener<List<PicturePost>>() {
-            @Override
-            public void onSuccess(List<PicturePost> picturePosts) {
-                if (picturePosts == null || picturePosts.isEmpty()) {
-                    isLastPage = true;
-                }
-                else {
-                    List<String> imageUris = picturePosts.stream().map(post -> post.getPhoto_URI()).collect(Collectors.toList());
-                    List<String> imagePostIds = picturePosts.stream().map(post -> post.getId()).collect(Collectors.toList());
-
-                    mosaicAdapter.addImages(imageUris, imagePostIds);
-
-                    lastId = imagePostIds.get(imagePostIds.size() - 1);
-                }
-                isLoading = false;
-            }
-        }, 16, lastId);
+            mosaicAdapter.addImages(imageUris, imagePostIds);
+        });
     }
 
     @Override
