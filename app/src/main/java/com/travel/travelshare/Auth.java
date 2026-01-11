@@ -104,12 +104,10 @@ public class Auth {
         FirebaseAuth.getInstance().addAuthStateListener(firebaseAuth -> {
             FirebaseUser fbUser = firebaseAuth.getCurrentUser();
 
-            if (fbUser == null) {
-                observer.accept(User.guest());
-            } else {
+            if (fbUser != null) {
                 userRepository.getItemByFirebaseUid(
                         fbUser.getUid(),
-                        user -> observer.accept(user != null ? user : User.guest())
+                        observer::accept
                 );
             }
         });

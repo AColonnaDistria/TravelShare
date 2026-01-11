@@ -22,6 +22,10 @@ public class MainViewModel extends ViewModel {
     public MainViewModel(Context context, Auth auth) {
         this.auth = auth;
 
+        this.auth.observeAuthState(user -> {
+            this.reloadUser(null);
+        });
+
         Storage.init(context);
 
         // INIT OSM-DROID
@@ -35,7 +39,9 @@ public class MainViewModel extends ViewModel {
     public void reloadUser(Auth.AuthReloadCallback callback) {
         this.auth.reload(user -> {
             activeUser.setValue(user);
-            callback.onReload(user);
+            if (callback != null) {
+                callback.onReload(user);
+            }
         });
     }
 

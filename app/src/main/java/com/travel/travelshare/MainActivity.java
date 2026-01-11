@@ -91,12 +91,7 @@ public class MainActivity extends AppCompatActivity {
             Menu navMenu = binding.navView.getMenu();
             MenuItem publishItem = navMenu.findItem(R.id.navigation_publish);
 
-            if (user.getUserType() == UserType.CONNECTED) {
-                publishItem.setVisible(false);
-            }
-            else {
-                publishItem.setVisible(true);
-            }
+            publishItem.setVisible((user.getUserType() == UserType.CONNECTED));
         });
     }
 
