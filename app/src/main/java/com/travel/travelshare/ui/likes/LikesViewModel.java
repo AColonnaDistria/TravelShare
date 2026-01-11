@@ -12,19 +12,20 @@ import com.travel.travelshare.model.user.User;
 import com.travel.travelshare.repositories.LikeRepository;
 import com.travel.travelshare.repositories.PostRepository;
 import com.travel.travelshare.repositories.UserRepository;
+import com.travel.travelshare.ui.discover.MosaicLoaderViewModel;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class LikesViewModel extends ViewModel {
+public class LikesViewModel extends MosaicLoaderViewModel {
     private final MutableLiveData<List<PicturePost>> likedPosts = new MutableLiveData<>(new ArrayList<>());
     private final LikeRepository likeRepository = new LikeRepository();
-    private final PostRepository postRepository = new PostRepository();
-    private final UserRepository userRepository = new UserRepository();
     private final Auth auth;
 
     public LikesViewModel(Auth auth) {
+        super();
+
         this.auth = auth;
 
         this.auth.observeAuthState(user -> {

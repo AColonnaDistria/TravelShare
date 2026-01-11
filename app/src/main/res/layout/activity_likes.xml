@@ -5,9 +5,10 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.likes.LikesActivity">
+    tools:context=".ui.likes.LikesActivity"
+    android:paddingTop="?attr/actionBarSize">
 
-    <androidx.fragment.app.FragmentContainerView
+<androidx.fragment.app.FragmentContainerView
         android:id="@+id/likes_fragment_return_bar"
         android:name="com.travel.travelshare.ui.elements.ReturnBarFragment"
         android:layout_width="match_parent"
@@ -21,7 +22,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="My likes"
-        android:textSize="20sp"
+        android:textSize="32sp"
         android:textStyle="bold"
         android:layout_margin="16dp"
         app:layout_constraintTop_toBottomOf="@id/likes_fragment_return_bar"
