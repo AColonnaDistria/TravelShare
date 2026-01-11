@@ -37,10 +37,7 @@ public class LoginFragment extends Fragment {
 
         binding = FragmentLoginBinding.inflate(inflater, container, false);
 
-        // Gestion du bouton de connexion
         binding.btnLogin.setOnClickListener(v -> loginUser());
-
-        // Navigation vers le fragment d'inscription
         binding.txtRegisterLink.setOnClickListener(v -> {
             Navigation.findNavController(v).navigate(R.id.action_login_to_register);
         });

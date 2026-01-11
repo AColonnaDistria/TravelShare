@@ -6,6 +6,7 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.travel.travelshare.model.user.ConnectedUser;
 import com.travel.travelshare.model.user.GuestUser;
 import com.travel.travelshare.model.user.User;
 import com.travel.travelshare.repositories.UserRepository;
@@ -41,6 +42,10 @@ public class Auth {
         void onFailure();
     }
 
+    public interface AuthRegisterCallback {
+        void onSuccess(User activeUser);
+        void onFailure();
+    }
 
     public void reload(AuthReloadCallback callback) {
         this.firebaseUser = this.mAuth.getCurrentUser();
@@ -87,6 +92,27 @@ public class Auth {
     public void signInWithEmailAndPassword(String email, String password, AuthLoginCallback callback) {
         this.mAuth.signInWithEmailAndPassword(email, password).addOnSuccessListener(task -> {
             this.reload(callback::onSuccess);
+        }).addOnFailureListener(task -> {
+            callback.onFailure();
+        });
+    }
+
+    public void createConnectedUser(ConnectedUser user, String password, AuthRegisterCallback callback) {
+        this.mAuth.createUserWithEmailAndPassword(user.getEmail(), password).addOnSuccessListener(task -> {
+            FirebaseUser fbUser = task.getUser();
+
+            if (fbUser != null) {
+                // Verification email
+                fbUser.sendEmailVerification().addOnCompleteListener(emailTask -> {
+                    if (emailTask.isSuccessful()) {
+                        user.setFirebaseUid(fbUser.getUid());
+                        this.userRepository.putItem(user);
+                        this.reload(callback::onSuccess);
+                    } else {
+                        callback.onFailure();
+                    }
+                });
+            }
         }).addOnFailureListener(task -> {
             callback.onFailure();
         });
