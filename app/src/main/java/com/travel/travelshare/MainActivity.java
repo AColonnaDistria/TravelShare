@@ -10,6 +10,7 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.PopupMenu;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
@@ -47,6 +48,7 @@ public class MainActivity extends AppCompatActivity {
 
     private FirebaseAuth mAuth;
     private User activeUser; // Votre classe modèle
+    private UserRepository userRepository;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -104,25 +106,104 @@ public class MainActivity extends AppCompatActivity {
                 MainActivity.this.showNotificationMenu(v);
             }
         });
+        this.userRepository = new UserRepository();
 
         this.mAuth = FirebaseAuth.getInstance();
+        if (mAuth.getCurrentUser() != null) {
+            this.userRepository.getItemByFirebaseUid(mAuth.getCurrentUser().getUid(), new OnSuccessListener<User>() {
+                @Override
+                public void onSuccess(User user) {
+                    if (user == null) {
+                        signInAnonymously();
+                    }
+                    else {
+                        if (mAuth.getCurrentUser().isEmailVerified()) {
+                            Toast.makeText(MainActivity.this, "Welcome back!", Toast.LENGTH_SHORT).show();
+                        }
+                        else if (!mAuth.getCurrentUser().isAnonymous()) {
+                            // Send a verification email
+                            mAuth.getCurrentUser().reload().addOnCompleteListener(task -> {
+                                if (mAuth.getCurrentUser().isEmailVerified()) {
+                                    Toast.makeText(MainActivity.this, "Welcome back!", Toast.LENGTH_SHORT).show();
+                                    changePublishItemVisibility();
+                                } else {
+                                    mAuth.getCurrentUser().sendEmailVerification()
+                                            .addOnCompleteListener(verifyTask -> {
+                                        if (verifyTask.isSuccessful()) {
+                                            Toast.makeText(MainActivity.this, "Please verify your email to continue.", Toast.LENGTH_LONG).show();
+                                        }
+                                        else {
+                                            Toast.makeText(MainActivity.this, "Failed to send verification email: " + verifyTask.getException(), Toast.LENGTH_LONG).show();
+                                        }
 
+                                        changePublishItemVisibility();
+
+                                    });
+                                }
+                            });
+                        }
+
+                        activeUser = user;
+                    }
+                }
+            });
+        }
+        else {
+            signInAnonymously();
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        FirebaseUser fbUser = FirebaseAuth.getInstance().getCurrentUser();
+        if (fbUser == null) return;
+
+        fbUser.reload().addOnCompleteListener(task -> {
+            userRepository.getItemByFirebaseUid(fbUser.getUid(), user -> {
+                if (user != null) {
+                    activeUser = user;
+                }
+                changePublishItemVisibility();
+            });
+        });
+    }
+
+    private void changePublishItemVisibility() {
+        Menu navMenu = binding.navView.getMenu();
+        MenuItem publishItem = navMenu.findItem(R.id.navigation_publish);
+
+        if (activeUser.getUserType() == UserType.GUEST || !isEmailVerifiedUser()) {
+            // Hide the publish tab
+            publishItem.setVisible(false);
+        } else {
+            publishItem.setVisible(true);
+        }
+    }
+
+    private boolean isEmailVerifiedUser() {
+        FirebaseUser fbUser = FirebaseAuth.getInstance().getCurrentUser();
+        return fbUser != null && !fbUser.isAnonymous() && fbUser.isEmailVerified();
+    }
+
+    private void signInAnonymously() {
         this.mAuth.signInAnonymously().addOnCompleteListener(this, task -> {
             if (task.isSuccessful()) {
-                FirebaseUser fbUser = mAuth.getCurrentUser();
-                // Créer votre objet User selon votre schéma (Guest par défaut)
-                UserRepository userRepo = new UserRepository();
+                FirebaseUser firebaseUser = mAuth.getCurrentUser();
 
-                userRepo.getItem(fbUser.getUid(), new OnSuccessListener<User>() {
+                this.userRepository.getItemByFirebaseUid(firebaseUser.getUid(), new OnSuccessListener<User>() {
                     @Override
                     public void onSuccess(User user) {
                         if (user == null) {
-                            activeUser = new GuestUser(fbUser.getUid(), Timestamp.now());
-                            userRepo.putItem(activeUser);
+                            activeUser = new GuestUser(firebaseUser.getUid(), Timestamp.now());
+                            userRepository.putItem(activeUser);
                         }
                         else {
                             activeUser = user;
                         }
+
+                        changePublishItemVisibility();
                     }
                 });
             }
@@ -130,6 +211,13 @@ public class MainActivity extends AppCompatActivity {
                 Log.v("[UNAUTHORIZED]", "Anonymous sign in did not work");
             }
         });
+    }
+
+    private void logout() {
+        this.mAuth.signOut();
+        activeUser = null;
+
+        signInAnonymously();
     }
 
     private void showProfileMenu(View anchorView) {
@@ -197,6 +285,11 @@ public class MainActivity extends AppCompatActivity {
                     }
                     else if (id == R.id.action_likes) {
                         // Handle Likes logic
+                        return true;
+                    }
+                    else if (id == R.id.action_log_out) {
+                        // Handle Logout logic
+                        logout();
                         return true;
                     }
                     return false;

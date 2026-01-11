@@ -14,9 +14,12 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.travel.travelshare.MainActivity;
 import com.travel.travelshare.R;
 import com.travel.travelshare.databinding.FragmentLoginBinding;
 import com.travel.travelshare.databinding.FragmentRegisterBinding;
@@ -81,6 +84,16 @@ public class RegisterFragment extends Fragment {
                         if (fbUser != null) {
                             saveUserToFirestore(fbUser, username, email);
                         }
+
+                        mAuth.getCurrentUser().sendEmailVerification()
+                                .addOnCompleteListener(verifyTask -> {
+                                    if (verifyTask.isSuccessful()) {
+                                        Toast.makeText(getContext(), "Please verify your email to continue.", Toast.LENGTH_LONG).show();
+                                    }
+                                    else {
+                                        Toast.makeText(getContext(), "Failed to send verification email: " + verifyTask.getException(), Toast.LENGTH_LONG).show();
+                                    }
+                                });
                     } else {
                         Toast.makeText(getContext(), "Signup error : " +
                                 task.getException().getMessage(), Toast.LENGTH_LONG).show();

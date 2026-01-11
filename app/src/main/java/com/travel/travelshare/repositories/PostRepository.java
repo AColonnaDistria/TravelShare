@@ -132,7 +132,13 @@ public class PostRepository {
             public void onSuccess(String imageUrl) {
                 item.setPhoto_URI(imageUrl);
 
-                document.set(item);
+                document.set(item)
+                    .addOnSuccessListener(v ->
+                        Log.d("FIRESTORE", "Post successfully written: " + document.getId())
+                    )
+                        .addOnFailureListener(e ->
+                                Log.e("FIRESTORE", "Firestore write failed", e)
+                        );
             }
         });
     }
