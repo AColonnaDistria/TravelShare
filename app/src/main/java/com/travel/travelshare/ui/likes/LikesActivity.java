@@ -10,14 +10,19 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
+import com.travel.travelshare.Auth;
 import com.travel.travelshare.R;
+import com.travel.travelshare.ui.auth.LoginViewModel;
+import com.travel.travelshare.ui.auth.LoginViewModelFactory;
 import com.travel.travelshare.ui.discover.MosaicAdapter;
+import com.travel.travelshare.ui.elements.ReturnBarFragment;
 
 import java.util.ArrayList;
 
-public class LikesActivity extends AppCompatActivity {
-    private LikesViewModel viewModel;
+public class LikesActivity extends AppCompatActivity implements ReturnBarFragment.OnCloseRequestedListener {
+    private LikesViewModel mViewModel;
     private MosaicAdapter adapter;
 
     @Override
@@ -25,21 +30,28 @@ public class LikesActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_likes);
 
-        // Initialize UI
         RecyclerView recyclerView = findViewById(R.id.likes_recycler_view);
-        recyclerView.setLayoutManager(new GridLayoutManager(this, 2));
+        StaggeredGridLayoutManager layoutManager = new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL);
+        layoutManager.setGapStrategy(StaggeredGridLayoutManager.GAP_HANDLING_NONE);
+
+        recyclerView.setLayoutManager(layoutManager);
+        recyclerView.setHasFixedSize(true);
 
         adapter = new MosaicAdapter();
         recyclerView.setAdapter(adapter);
 
-        viewModel = new ViewModelProvider(this).get(LikesViewModel.class);
+        LikesViewModelFactory factory = new LikesViewModelFactory(Auth.getInstance());
+        this.mViewModel = new ViewModelProvider(this, factory).get(LikesViewModel.class);
 
-        // Observe data changes
-        viewModel.getLikedPosts().observe(this, posts -> {
-            adapter.addPosts(posts); // Assuming setPosts method exists in MosaicAdapter
+        this.mViewModel.getLikedPosts().observe(this, posts -> {
+            if (posts != null) {
+                adapter.addPosts(posts);
+            }
         });
+    }
 
-        // Load data for current user (Replace "current_user_id" with actual auth ID)
-        viewModel.loadLikedPosts("current_user_id");
+    @Override
+    public void onRequestClose() {
+        finish();
     }
 }

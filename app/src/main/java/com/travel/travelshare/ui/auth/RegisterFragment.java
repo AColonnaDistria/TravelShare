@@ -37,7 +37,7 @@ public class RegisterFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
-        RegisterViewModelFactory factory = new RegisterViewModelFactory(new Auth());
+        RegisterViewModelFactory factory = new RegisterViewModelFactory(Auth.getInstance());
         this.mViewModel = new ViewModelProvider(this, factory).get(RegisterViewModel.class);
 
         binding = FragmentRegisterBinding.inflate(inflater, container, false);

@@ -43,11 +43,15 @@ public class MosaicAdapter extends RecyclerView.Adapter<MosaicViewHolder> {
     }
 
     public void addPosts(List<PicturePost> posts) {
-        int startPos = imageList.size();
+        if (posts != null) {
+            int startPos = imageList.size();
 
-        for (PicturePost post : posts) {
-            this.imageList.add(post.getPhoto_URI());
-            this.imagePostIds.add(post.getId());
+            for (PicturePost post : posts) {
+                this.imageList.add(post.getPhoto_URI());
+                this.imagePostIds.add(post.getId());
+            }
+
+            notifyItemRangeInserted(startPos, posts.size());
         }
     }
 

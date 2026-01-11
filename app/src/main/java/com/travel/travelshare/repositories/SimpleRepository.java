@@ -30,7 +30,9 @@ public class SimpleRepository<Item extends DatabaseItem> implements IRepository<
                         return documentSnapshot.toObject(class_);
                     }).collect(Collectors.toList());
 
-                    listener.onSuccess(items);
+                    if (listener != null) {
+                        listener.onSuccess(items);
+                    }
                 });
     }
 
@@ -51,4 +53,5 @@ public class SimpleRepository<Item extends DatabaseItem> implements IRepository<
 
         this.database.collection(this.collectionPath).document(id).set(item);
     }
+
 }

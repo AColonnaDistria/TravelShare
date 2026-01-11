@@ -33,6 +33,7 @@ import com.travel.travelshare.model.user.UserType;
 import com.travel.travelshare.repositories.Storage;
 import com.travel.travelshare.repositories.UserRepository;
 import com.travel.travelshare.ui.cardview.CardViewActivity;
+import com.travel.travelshare.ui.likes.LikesActivity;
 import com.travel.travelshare.ui.likes.LikesViewModel;
 
 import java.util.List;
@@ -55,7 +56,10 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        MainViewModelFactory factory = new MainViewModelFactory(this, new Auth());
+        Auth auth = Auth.getInstance();
+        auth.init();
+
+        MainViewModelFactory factory = new MainViewModelFactory(this, auth);
         this.mViewModel = new ViewModelProvider(this, factory).get(MainViewModel.class);
 
         this.binding = ActivityMainBinding.inflate(getLayoutInflater());
@@ -112,6 +116,11 @@ public class MainActivity extends AppCompatActivity {
 
             if (id == R.id.action_likes) {
                 // Handle Likes
+
+                Intent intent = new Intent(MainActivity.this, LikesActivity.class);
+
+                startActivity(intent);
+
                 return true;
             }
             else if (id == R.id.action_signup) {
@@ -161,6 +170,11 @@ public class MainActivity extends AppCompatActivity {
             }
             else if (id == R.id.action_likes) {
                 // Handle Likes logic
+
+                Intent intent = new Intent(MainActivity.this, LikesActivity.class);
+
+                startActivity(intent);
+
                 return true;
             }
             else if (id == R.id.action_log_out) {

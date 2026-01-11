@@ -14,22 +14,34 @@ import com.travel.travelshare.repositories.UserRepository;
 import java.util.function.Consumer;
 
 public class Auth {
+    private static Auth instance;
+
     private final FirebaseAuth mAuth;
     private final UserRepository userRepository;
     private User activeUser;
     private FirebaseUser firebaseUser;
 
-    public Auth() {
+    private Auth() {
         this.mAuth = FirebaseAuth.getInstance();
         this.userRepository = new UserRepository();
+    }
 
+    public static synchronized Auth getInstance() {
+        if (instance == null) {
+            instance = new Auth();
+        }
+
+        return instance;
+    }
+
+    public void init() {
         this.firebaseUser = this.mAuth.getCurrentUser();
         if (this.firebaseUser == null) {
             this.mAuth.signInAnonymously();
         }
 
         this.userRepository.getItemByFirebaseUid(this.mAuth.getUid(), user -> {
-           this.activeUser = user;
+            this.activeUser = user;
         });
     }
 
@@ -53,7 +65,9 @@ public class Auth {
             this.signInAnonymously(new AuthLoginCallback() {
                 @Override
                 public void onSuccess(User activeUser) {
-                    callback.onReload(activeUser);
+                    if (callback != null) {
+                        callback.onReload(activeUser);
+                    }
                 }
 
                 @Override
@@ -71,7 +85,9 @@ public class Auth {
                         userRepository.putItem(activeUser);
                     }
 
-                    callback.onReload(activeUser);
+                    if (callback != null) {
+                        callback.onReload(activeUser);
+                    }
                 });
             });
         }
@@ -83,17 +99,31 @@ public class Auth {
 
     public void signInAnonymously(AuthLoginCallback callback) {
         this.mAuth.signInAnonymously().addOnSuccessListener(task -> {
-            this.reload(callback::onSuccess);
+            if (callback != null) {
+                this.reload(callback::onSuccess);
+            }
+            else {
+                this.reload(null);
+            }
         }).addOnFailureListener(task -> {
-            callback.onFailure();
+            if (callback != null) {
+                callback.onFailure();
+            }
         });
     }
 
     public void signInWithEmailAndPassword(String email, String password, AuthLoginCallback callback) {
         this.mAuth.signInWithEmailAndPassword(email, password).addOnSuccessListener(task -> {
-            this.reload(callback::onSuccess);
+            if (callback != null) {
+                this.reload(callback::onSuccess);
+            }
+            else {
+                this.reload(null);
+            }
         }).addOnFailureListener(task -> {
-            callback.onFailure();
+            if (callback != null) {
+                callback.onFailure();
+            }
         });
     }
 
@@ -106,15 +136,19 @@ public class Auth {
                 fbUser.sendEmailVerification().addOnCompleteListener(emailTask -> {
                     if (emailTask.isSuccessful()) {
                         user.setFirebaseUid(fbUser.getUid());
-                        this.userRepository.putItem(user);
+                        this.userRepository.putItemAndReplaceByFirebaseUid(user);
                         this.reload(callback::onSuccess);
                     } else {
-                        callback.onFailure();
+                        if (callback != null) {
+                            callback.onFailure();
+                        }
                     }
                 });
             }
         }).addOnFailureListener(task -> {
-            callback.onFailure();
+            if (callback != null) {
+                callback.onFailure();
+            }
         });
     }
 
@@ -130,6 +164,10 @@ public class Auth {
             return this.activeUser.getFirebaseUid();
         }
         return null;
+    }
+
+    public User getActiveUser() {
+        return this.activeUser;
     }
 
     public boolean isActiveUserAnonymous() {

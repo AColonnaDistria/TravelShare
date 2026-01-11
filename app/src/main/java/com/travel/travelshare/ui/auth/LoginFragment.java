@@ -32,7 +32,7 @@ public class LoginFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
-        LoginViewModelFactory factory = new LoginViewModelFactory(new Auth());
+        LoginViewModelFactory factory = new LoginViewModelFactory(Auth.getInstance());
         this.mViewModel = new ViewModelProvider(this, factory).get(LoginViewModel.class);
 
         binding = FragmentLoginBinding.inflate(inflater, container, false);

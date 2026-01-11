@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:paddingTop="?attr/actionBarSize">
 
-    <fragment
+    <androidx.fragment.app.FragmentContainerView
         android:id="@+id/fragment_return_bar"
         android:name="com.travel.travelshare.ui.elements.ReturnBarFragment"
         android:layout_width="match_parent"

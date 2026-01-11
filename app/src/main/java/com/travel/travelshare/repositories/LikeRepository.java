@@ -18,7 +18,9 @@ public class LikeRepository extends SimpleRepository<Like> {
                 .addOnSuccessListener(querySnapshot -> {
                     List<Like> likes = querySnapshot.toObjects(Like.class);
 
-                    listener.onSuccess(likes);
+                    if (listener != null) {
+                        listener.onSuccess(likes);
+                    }
                 });
     }
 }

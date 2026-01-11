@@ -1,5 +1,9 @@
 package com.travel.travelshare.repositories;
+import android.util.Log;
+
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.WriteBatch;
 import com.travel.travelshare.model.user.User;
 
 public class UserRepository extends SimpleRepository<User> {
@@ -7,6 +11,15 @@ public class UserRepository extends SimpleRepository<User> {
 
     public UserRepository() {
         super(User.class, collectionPath);
+    }
+
+    public void putItemAndReplaceByFirebaseUid(User user) {
+        String id = user.getId();
+        String firebaseUid = user.getFirebaseUid();
+
+        this.removeItemsByFirebaseUid(firebaseUid, x -> {
+            this.database.collection(this.collectionPath).document(id).set(user);
+        });
     }
 
     public void getItemByFirebaseUid(String firebaseUid, OnSuccessListener<User> listener) {
@@ -25,6 +38,24 @@ public class UserRepository extends SimpleRepository<User> {
                     {
                         listener.onSuccess(null);
                     }
+                });
+    }
+    public void removeItemsByFirebaseUid(String firebaseUid, OnSuccessListener<?> listener) {
+        this.database.collection(collectionPath)
+                .whereEqualTo("firebaseUid", firebaseUid)
+                .get()
+                .addOnSuccessListener(querySnapshot -> {
+                    for (DocumentSnapshot document : querySnapshot.getDocuments()) {
+                        document.getReference().delete()
+                                .addOnSuccessListener(aVoid -> {
+                                    Log.v("FIREBASE", "Deleted document: " + document.getId());
+                                })
+                                .addOnFailureListener(e -> {
+                                    Log.v("FIREBASE", "Failed to delete: " + document.getId());
+                                });
+                    }
+
+                    listener.onSuccess(null);
                 });
     }
 }
