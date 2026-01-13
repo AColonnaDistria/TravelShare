@@ -1,6 +1,7 @@
 package com.travel.travelshare.ui.publish;
 
 import android.icu.text.SimpleDateFormat;
+import android.icu.util.TimeZone;
 import android.net.Uri;
 import android.os.Bundle;
 import android.text.Editable;
@@ -20,6 +21,7 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.bumptech.glide.Glide;
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.datepicker.MaterialDatePicker;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.firebase.Timestamp;
 import com.travel.travelshare.databinding.FragmentPublishBinding;
@@ -86,6 +88,23 @@ public class PublishFragment extends Fragment {
                              ViewGroup container, Bundle savedInstanceState) {
         binding = FragmentPublishBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
+
+        binding.publishEditDate.setOnClickListener(v -> {
+            MaterialDatePicker<Long> datePicker = MaterialDatePicker.Builder.datePicker()
+                    .setTitleText("Select Date")
+                    .setSelection(MaterialDatePicker.todayInUtcMilliseconds())
+                    .build();
+
+            datePicker.addOnPositiveButtonClickListener(selection -> {
+                SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
+                sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+
+                String formattedDate = sdf.format(new Date(selection));
+                binding.publishEditDate.setText(formattedDate);
+            });
+
+            datePicker.show(getParentFragmentManager(), "DATE_PICKER");
+        });
 
         binding.publishEditDate.addTextChangedListener(new TextWatcher() {
             @Override
