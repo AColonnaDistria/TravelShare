@@ -1,7 +1,9 @@
 package com.travel.travelshare.ui.publish;
 
-import android.icu.text.SimpleDateFormat;
-import android.icu.util.TimeZone;
+import java.text.SimpleDateFormat;
+
+import java.time.Instant;
+import java.util.TimeZone;
 import android.net.Uri;
 import android.os.Bundle;
 import android.text.Editable;
@@ -12,9 +14,12 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.PickVisualMediaRequest;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.core.content.FileProvider;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
@@ -24,9 +29,13 @@ import com.google.android.material.button.MaterialButton;
 import com.google.android.material.datepicker.MaterialDatePicker;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.firebase.Timestamp;
+import com.travel.travelshare.LocationPickerDialog;
+import com.travel.travelshare.R;
 import com.travel.travelshare.databinding.FragmentPublishBinding;
 import com.travel.travelshare.model.location.ApproximateLocation;
+import com.travel.travelshare.model.location.ExactLocation;
 import com.travel.travelshare.model.location.Location;
+import com.travel.travelshare.model.location.LocationType;
 import com.travel.travelshare.model.post.PicturePost;
 import com.travel.travelshare.repositories.PostRepository;
 
@@ -66,6 +75,7 @@ public class PublishFragment extends Fragment {
             } else {
                 Log.v("LOG", "CAMERA_FAILED");
                 // User cancelled or camera failed
+                this.mViewModel.setPhotoURI(null);
             }
         });
 
@@ -84,6 +94,30 @@ public class PublishFragment extends Fragment {
         });
     }
 
+    public String getFormattedDMS(double coordinate, boolean isLatitude) {
+        double absolute = Math.abs(coordinate);
+        int degrees = (int) absolute;
+
+        double minutesNotTruncated = (absolute - degrees) * 60;
+        int minutes = (int) minutesNotTruncated;
+
+        double seconds = (minutesNotTruncated - minutes) * 60;
+
+        String direction;
+        if (isLatitude) {
+            direction = coordinate >= 0 ? "N" : "S";
+        } else {
+            direction = coordinate >= 0 ? "E" : "W";
+        }
+
+        // Change %.6f to %.2f to round to two decimal places
+        return String.format("%d°%d'%.2f''%s", degrees, minutes, seconds, direction);
+    }
+
+    public String formatToDMS(double latitude, double longitude) {
+        return getFormattedDMS(latitude, true) + " " + getFormattedDMS(longitude, false);
+    }
+
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
         binding = FragmentPublishBinding.inflate(inflater, container, false);
@@ -96,36 +130,10 @@ public class PublishFragment extends Fragment {
                     .build();
 
             datePicker.addOnPositiveButtonClickListener(selection -> {
-                SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
-                sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
-
-                String formattedDate = sdf.format(new Date(selection));
-                binding.publishEditDate.setText(formattedDate);
+                this.mViewModel.setDate(new Date(selection));
             });
 
             datePicker.show(getParentFragmentManager(), "DATE_PICKER");
-        });
-
-        binding.publishEditDate.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void afterTextChanged(Editable s) {
-                String text = s.toString();
-
-                if (text.length() != 10) return; // dd/MM/yyyy = 10 chars
-
-                try {
-                    DateTimeFormatter DATE_FORMATTER;
-                    LocalDate date = LocalDate.parse(text, PublishFragment.DATE_FORMATTER);
-                    mViewModel.setDate(date.atStartOfDay());
-                } catch (Exception e) {
-                    // Invalid date -> ignore
-                }
-            }
-
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {}
         });
 
         binding.publishEditDescription.addTextChangedListener(new TextWatcher() {
@@ -152,23 +160,10 @@ public class PublishFragment extends Fragment {
             public void onTextChanged(CharSequence s, int start, int before, int count) {}
         });
 
-        binding.publishEditLocation.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void afterTextChanged(Editable s) {
-                mViewModel.setLocation(s.toString());
-            }
-
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {}
-        });
-
         binding.publishUploadButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                PublishFragment.this.mViewModel.setPhotoURI(PublishFragment.this.mViewModel.createPhotoUri(getContext()));
-                PublishFragment.this.pickMediaLauncher.launch(new androidx.activity.result.PickVisualMediaRequest.Builder()
+                PublishFragment.this.pickMediaLauncher.launch(new PickVisualMediaRequest.Builder()
                         .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly.INSTANCE)
                         .build());
             }
@@ -177,8 +172,11 @@ public class PublishFragment extends Fragment {
         binding.publishTakePhotoButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                PublishFragment.this.mViewModel.setPhotoURI(PublishFragment.this.mViewModel.createPhotoUri(getContext()));
-                PublishFragment.this.takePictureLauncher.launch(PublishFragment.this.mViewModel.getPhotoURI().getValue());
+                Uri cameraUri = PublishFragment.this.mViewModel.createTempUri(getContext());
+                if (cameraUri != null) {
+                    PublishFragment.this.mViewModel.setPhotoURI(cameraUri);
+                    PublishFragment.this.takePictureLauncher.launch(cameraUri);
+                }
             }
         });
 
@@ -192,28 +190,123 @@ public class PublishFragment extends Fragment {
         binding.privateToggleButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                PublishFragment.this.mViewModel.setVisibility(false); // set to PUBLIC
+                PublishFragment.this.mViewModel.setVisibility(false); // set to PRIVATE
             }
+        });
+
+        binding.publishEditLocation.setOnClickListener(v -> {
+            LocationPickerDialog locationPicker = new LocationPickerDialog();
+            locationPicker.show(getChildFragmentManager(), "LOCATION_PICKER");
+
+            locationPicker.setLocationResultListener(location -> {
+                if (location.getLocationType() == LocationType.EXACT) {
+                    ExactLocation exact = (ExactLocation) location;
+                    //binding.publishEditLocation.setText(formatToDMS(exact.getLatitude(), exact.getLongitude()));
+                    this.mViewModel.setLocation(exact);
+                } else if (location.getLocationType() == LocationType.APPROXIMATE) {
+                    ApproximateLocation approx = (ApproximateLocation) location;
+                    //binding.publishEditLocation.setText(approx.getName());
+                    this.mViewModel.setLocation(approx);
+                }
+            });
         });
 
         binding.publishButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                PublishViewModel.ValidationFormStatus status = mViewModel.validateForm();
+
+                switch (status) {
+                    case OK:
+                        PublishFragment.this.mViewModel.saveImagePublication(getContext(), task -> {
+                            if (task.isSuccessful()) {
+                                Toast.makeText(getContext(), "Your post has been uploaded!", Toast.LENGTH_LONG).show();
+                                resetForm();
+                            }
+                            else {
+                                Toast.makeText(getContext(), "Error: Your post could not be uploaded. Check internet connection.", Toast.LENGTH_LONG).show();
+                            }
+                        });
+                        break;
+                    case PICTURE_MISSING:
+                        Toast.makeText(getContext(), "Picture is required", Toast.LENGTH_SHORT).show();
+                        break;
+                    case DATE_MISSING:
+                        Toast.makeText(getContext(), "Date is required", Toast.LENGTH_SHORT).show();
+                        break;
+                    case DESCRIPTION_MISSING:
+                        Toast.makeText(getContext(), "Description is required", Toast.LENGTH_SHORT).show();
+                        break;
+                    case INSTRUCTIONS_MISSING:
+                        Toast.makeText(getContext(), "Instructions are required", Toast.LENGTH_SHORT).show();
+                        break;
+                    case LOCATION_MISSING:
+                        Toast.makeText(getContext(), "Location is required", Toast.LENGTH_SHORT).show();
+                        break;
+                }
                 // Save image publication
-                PublishFragment.this.mViewModel.saveImagePublication();
+            }
+        });
+
+        return root;
+    }
+
+    private void resetForm() {
+        this.mViewModel.reset();
+
+    }
+
+    private void checkRequiredFields() {
+        binding.publishButton.setEnabled(
+                mViewModel.getPhotoURI().getValue() != null
+             && mViewModel.getDescription().getValue() != null
+             && !mViewModel.getDescription().getValue().trim().isEmpty()
+             && mViewModel.getInstructions().getValue() != null
+             && !mViewModel.getInstructions().getValue().trim().isEmpty()
+             && mViewModel.getLocation().getValue() != null);
+    }
+
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
+        this.mViewModel.getDate().observe(this.getViewLifecycleOwner(), date -> {
+            checkRequiredFields();
+
+            if (date != null) {
+                SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
+                sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+
+                String formattedDate = sdf.format(date);
+                binding.publishEditDate.setText(formattedDate);
+            }
+            else {
+                binding.publishEditDate.setText("dd/mm/yyyy");
             }
         });
 
         this.mViewModel.getPhotoURI().observe(this.getViewLifecycleOwner(), uri -> {
-            binding.publishImageCardview.setImageTintList(null);
+            checkRequiredFields();
 
-            Glide.with(this)
-                    .load(uri)
-                    .centerCrop()
-                    .into(binding.publishImageCardview);
+            if (uri != null) {
+                binding.publishImageCardview.setImageTintList(null);
+
+                Glide.with(this)
+                        .load(uri)
+                        .centerCrop()
+                        .into(binding.publishImageCardview);
+            }
+            else {
+                Glide.with(this).clear(binding.publishImageCardview);
+
+                binding.publishImageCardview.setImageTintList(null);
+                binding.publishImageCardview.setImageResource(R.drawable.image_48px);
+                binding.publishImageCardview.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+            }
         });
 
         this.mViewModel.getVisibility().observe(this.getViewLifecycleOwner(), is_public -> {
+            checkRequiredFields();
+
             if (is_public != binding.publicToggleButton.isChecked()) {
                 binding.publicToggleButton.setChecked(is_public);
             }
@@ -222,30 +315,54 @@ public class PublishFragment extends Fragment {
             }
         });
 
-        /*
-        this.mViewModel.getDate().observe(this.getViewLifecycleOwner(), date -> {
-            String dateAsString = DateTimeFormatter.ofPattern("dd/MM/yyyy").format(date);
-
-            if (!dateAsString.equals(binding.publishEditDate.getText().toString())) {
-                binding.publishEditDate.setText(dateAsString);
-            }
-        });
-
-         */
-
         this.mViewModel.getDescription().observe(this.getViewLifecycleOwner(), description -> {
-            if (!description.equals(binding.publishEditDescription.getText().toString())) {
+            checkRequiredFields();
+
+            if (description == null) {
+                binding.publishEditDescription.setText("");
+            }
+            else if (!description.equals(binding.publishEditDescription.getText().toString())) {
                 binding.publishEditDescription.setText(description);
             }
         });
 
-        this.mViewModel.getLocation().observe(this.getViewLifecycleOwner(), location -> {
-            if (!location.equals(binding.publishEditLocation.getText().toString())) {
-                binding.publishEditLocation.setText(this.mViewModel.getLocation().getValue());
+        this.mViewModel.getInstructions().observe(this.getViewLifecycleOwner(), instructions -> {
+            checkRequiredFields();
+
+            if (instructions == null) {
+                binding.publishEditInstructions.setText("");
+            }
+            else if (!instructions.equals(binding.publishEditInstructions.getText().toString())) {
+                binding.publishEditInstructions.setText(instructions);
             }
         });
 
-        return root;
+        this.mViewModel.getLocation().observe(getViewLifecycleOwner(), location -> {
+            checkRequiredFields();
+
+            if (location != null) {
+                switch (location.getLocationType()) {
+                    case EXACT:
+                        binding.publishEditLocation.setText(formatToDMS(
+                                location.getLatitude(),
+                                location.getLongitude()
+                        ));
+                        break;
+                    case APPROXIMATE:
+                        binding.publishEditLocation.setText(String.format("%s, %s, %s, %s",
+                                location.getName(),
+                                location.getCity(),
+                                location.getRegion(),
+                                location.getCountry()
+                        ));
+                        break;
+                }
+            }
+            else {
+                binding.publishEditLocation.setText("");
+            }
+        });
+
     }
 
     @Override

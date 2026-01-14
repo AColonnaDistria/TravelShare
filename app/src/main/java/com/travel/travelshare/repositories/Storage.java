@@ -36,7 +36,7 @@ public class Storage {
         void onFailure(String error);
     }
 
-    public static void uploadImage(Uri filePath, OnUploadListener listener) {
+    public static void uploadImage(Context context, Uri filePath, OnUploadListener listener) {
         // "android_upload" is the preset you made in the dashboard
         MediaManager.get().upload(filePath)
                 .unsigned("travelshare_upload")
@@ -68,6 +68,6 @@ public class Storage {
                     @Override
                     public void onReschedule(String requestId, ErrorInfo error) {}
                 })
-                .dispatch();
+                .dispatch(context);
     }
 }

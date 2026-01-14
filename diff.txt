@@ -1,0 +1,1249 @@
+diff --git a/app/src/main/java/com/travel/travelshare/LocationPickerDialog.java b/app/src/main/java/com/travel/travelshare/LocationPickerDialog.java
+new file mode 100644
+index 0000000..50f1536
+--- /dev/null
++++ b/app/src/main/java/com/travel/travelshare/LocationPickerDialog.java
+@@ -0,0 +1,158 @@
++package com.travel.travelshare;
++
++import android.os.Bundle;
++import android.view.LayoutInflater;
++import android.view.MotionEvent;
++import android.view.View;
++import android.view.ViewGroup;
++
++import androidx.annotation.NonNull;
++import androidx.annotation.Nullable;
++
++import com.firebase.geofire.GeoFireUtils;
++import com.firebase.geofire.GeoLocation;
++import com.firebase.geofire.core.GeoHash;
++import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
++import com.google.android.material.tabs.TabLayout;
++import com.travel.travelshare.databinding.DialogLocationPickerBinding;
++import com.travel.travelshare.model.location.Location;
++import com.travel.travelshare.model.location.ExactLocation;
++import com.travel.travelshare.model.location.ApproximateLocation;
++import com.travel.travelshare.ui.map.MapFragment;
++
++import org.osmdroid.api.IMapController;
++import org.osmdroid.events.MapEventsReceiver;
++import org.osmdroid.util.GeoPoint;
++import org.osmdroid.views.overlay.MapEventsOverlay;
++import org.osmdroid.views.overlay.Marker;
++
++public class LocationPickerDialog extends BottomSheetDialogFragment {
++
++    private static double ZOOM_LEVEL_PICTURE_POST_TRIGGER = 15.0;
++
++    public interface LocationResultListener {
++        void onLocationSelected(Location location);
++    }
++
++    private LocationUtils locationUtils;
++    private LocationResultListener listener;
++    private DialogLocationPickerBinding binding; // Assuming you have a layout file
++
++    public void setLocationResultListener(LocationResultListener listener) {
++        this.listener = listener;
++    }
++
++    // Inside your LocationPickerDialog (BottomSheetDialogFragment)
++    private Marker selectedMarker;
++
++    private void setupMapLogic() {
++        // 1. Initialize the Marker
++        selectedMarker = new Marker(binding.mapPicker);
++        selectedMarker.setTitle("Selected Location");
++        selectedMarker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
++        binding.mapPicker.getOverlays().add(selectedMarker);
++
++        // 2. Capture Map Clicks
++        MapEventsReceiver mReceive = new MapEventsReceiver() {
++            @Override
++            public boolean singleTapConfirmedHelper(GeoPoint p) {
++                // Move the marker to where the user tapped
++                selectedMarker.setPosition(p);
++                binding.mapPicker.invalidate(); // Refresh map to show marker move
++
++                // Optionally update the manual Lat/Lon EditTexts
++                //binding.editLat.setText(String.valueOf(p.getLatitude()));
++                //binding.editLon.setText(String.valueOf(p.getLongitude()));
++                return true;
++            }
++
++            @Override
++            public boolean longPressHelper(GeoPoint p) {
++                return false;
++            }
++        };
++
++        MapEventsOverlay eventsOverlay = new MapEventsOverlay(mReceive);
++        binding.mapPicker.getOverlays().add(eventsOverlay);
++    }
++
++
++    @Override
++    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
++        this.locationUtils = new LocationUtils(getContext());
++
++        binding = DialogLocationPickerBinding.inflate(inflater, container, false);
++        binding.mapPicker.setMultiTouchControls(true);
++
++        binding.mapPicker.setMinZoomLevel(4.0);
++        binding.mapPicker.setMaxZoomLevel(20.0);
++
++        setupMapLogic();
++
++        IMapController mapController = binding.mapPicker.getController();
++        mapController.setZoom(15.0);
++
++        GeoPoint startPoint = new GeoPoint(48.8583, 2.2944);
++        mapController.setCenter(startPoint);
++
++        // Tab selection logic
++        binding.locationTabs.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
++            @Override
++            public void onTabSelected(TabLayout.Tab tab) {
++                if (tab.getPosition() == 0) {
++                    binding.viewPrecise.setVisibility(View.VISIBLE);
++                    binding.viewApproximate.setVisibility(View.GONE);
++                } else {
++                    binding.viewPrecise.setVisibility(View.GONE);
++                    binding.viewApproximate.setVisibility(View.VISIBLE);
++                }
++            }
++            @Override public void onTabUnselected(TabLayout.Tab tab) {}
++            @Override public void onTabReselected(TabLayout.Tab tab) {}
++        });
++
++        binding.mapPicker.setOnTouchListener((v, event) -> {
++            int action = event.getAction();
++            switch (action) {
++                case MotionEvent.ACTION_DOWN:
++                    v.getParent().requestDisallowInterceptTouchEvent(true);
++                    break;
++
++                case MotionEvent.ACTION_UP:
++                    v.getParent().requestDisallowInterceptTouchEvent(false);
++
++
++                    break;
++            }
++
++            return v.onTouchEvent(event);
++        });
++
++        binding.btnConfirm.setOnClickListener(v -> {
++            if (listener != null) {
++                if (binding.locationTabs.getSelectedTabPosition() == 0) {
++                    double lat = binding.mapPicker.getMapCenter().getLatitude();
++                    double lon = binding.mapPicker.getMapCenter().getLongitude();
++
++                    listener.onLocationSelected(locationUtils.getLocationFromCoords(lat, lon));
++                }
++                else {
++                    String name = binding.pickerLocationName.getText().toString();
++                    String city = binding.pickerLocationCity.getText().toString();
++                    String region = binding.pickerLocationRegion.getText().toString();
++                    String country = binding.pickerLocationCountry.getText().toString();
++
++                    listener.onLocationSelected(locationUtils.getLocationFromApproximateAddress(
++                        name,
++                        city,
++                        region,
++                        country
++                    ));
++                }
++            }
++            dismiss(); // Close the dialog
++        });
++
++        return binding.getRoot();
++    }
++}
+diff --git a/app/src/main/java/com/travel/travelshare/LocationUtils.java b/app/src/main/java/com/travel/travelshare/LocationUtils.java
+new file mode 100644
+index 0000000..ac882d8
+--- /dev/null
++++ b/app/src/main/java/com/travel/travelshare/LocationUtils.java
+@@ -0,0 +1,87 @@
++package com.travel.travelshare;
++
++import android.content.Context;
++import android.location.Address;
++import android.location.Geocoder;
++
++import com.firebase.geofire.GeoFireUtils;
++import com.firebase.geofire.GeoLocation;
++import com.travel.travelshare.model.location.ApproximateLocation;
++import com.travel.travelshare.model.location.ExactLocation;
++
++import java.io.IOException;
++import java.util.List;
++import java.util.Locale;
++
++public class LocationUtils {
++    private final Geocoder geocoder;
++
++    public LocationUtils(Context context) {
++        this.geocoder = new Geocoder(context, Locale.getDefault());
++    }
++
++    public ApproximateLocation getLocationFromApproximateAddress(String locationName, String city, String region, String country) {
++        StringBuilder addressBuilder = new StringBuilder();
++        if (!city.isEmpty()) addressBuilder.append(city).append(", ");
++        if (!region.isEmpty()) addressBuilder.append(region).append(", ");
++        if (!country.isEmpty()) addressBuilder.append(country);
++
++        String address = (locationName + " " + city + " " + region + " " + country).trim();
++        if (address.isEmpty())
++            return null;
++
++        try {
++            List<Address> results = geocoder.getFromLocationName(address, 1);
++            if (results != null && !results.isEmpty()) {
++                Address match = results.get(0);
++                double lat = match.getLatitude();
++                double lon = match.getLongitude();
++                String geohash = GeoFireUtils.getGeoHashForLocation(new GeoLocation(lat, lon));
++
++                return new ApproximateLocation(
++                    locationName,
++                    city,
++                    region,
++                    country,
++                    lat,
++                    lon,
++                    geohash
++                );
++            }
++        }
++        catch (IOException e) {
++            e.printStackTrace();
++        }
++
++        return null;
++    }
++
++    public ExactLocation getLocationFromCoords(double lat, double lon) {
++        try {
++            List<Address> addresses = this.geocoder.getFromLocation(lat, lon, 1);
++
++            if (addresses != null && !addresses.isEmpty()) {
++                Address address = addresses.get(0);
++
++                String placeName = address.getFeatureName();
++                String city = address.getLocality();
++                String region = address.getAdminArea();
++                String country = address.getCountryName();
++                String geohash = GeoFireUtils.getGeoHashForLocation(new GeoLocation(lat, lon));
++
++                return new ExactLocation(
++                        placeName,
++                        city,
++                        region,
++                        country,
++                        lat, lon,
++                        geohash
++                );
++            }
++        } catch (IOException e) {
++            e.printStackTrace();
++        }
++
++        return null;
++    }
++}
+diff --git a/app/src/main/java/com/travel/travelshare/repositories/IRepository.java b/app/src/main/java/com/travel/travelshare/repositories/IRepository.java
+index 840b053..7715978 100644
+--- a/app/src/main/java/com/travel/travelshare/repositories/IRepository.java
++++ b/app/src/main/java/com/travel/travelshare/repositories/IRepository.java
+@@ -1,11 +1,22 @@
+ package com.travel.travelshare.repositories;
+ 
++import com.google.android.gms.tasks.OnCompleteListener;
+ import com.google.android.gms.tasks.OnSuccessListener;
++import com.google.android.gms.tasks.Task;
++import com.google.firebase.firestore.DocumentReference;
+ import com.travel.travelshare.model.DatabaseItem;
+ 
++import java.util.List;
++
+ public interface IRepository<Item extends DatabaseItem> {
+ 
+     void getItem(String id, OnSuccessListener<Item> listener);
++    void getPage(OnSuccessListener<List<Item>> listener, int pageSize, String lastId);
++
++    String putItem(Item item, OnCompleteListener<Void> listener);
++    String putItem(String id, Item item, OnCompleteListener<Void> listener);
++    String putItem();
+ 
+-    void putItem(Item item);
++    String putItem(Item item);
++    String putItem(String id, Item item);
+ }
+diff --git a/app/src/main/java/com/travel/travelshare/repositories/PostRepository.java b/app/src/main/java/com/travel/travelshare/repositories/PostRepository.java
+index 0c0ef13..bb11fe3 100644
+--- a/app/src/main/java/com/travel/travelshare/repositories/PostRepository.java
++++ b/app/src/main/java/com/travel/travelshare/repositories/PostRepository.java
+@@ -19,55 +19,15 @@ import com.google.firebase.firestore.FirebaseFirestore;
+ import com.google.firebase.firestore.Query;
+ import com.google.firebase.firestore.QuerySnapshot;
+ import com.travel.travelshare.model.post.PicturePost;
++import com.travel.travelshare.model.user.Report;
+ 
+ import java.util.ArrayList;
+ import java.util.List;
+ import java.util.stream.Collectors;
+ 
+-public class PostRepository {
+-    private final FirebaseFirestore database = FirebaseFirestore.getInstance();
+-    //private final FirebaseStorage storage = FirebaseStorage.getInstance();
+-
+-    private static final String collectionPath = "travelshare_picture_posts";
+-    //private static final String storagePath = "travelshare_pictures";
+-
+-    public void getItem(String id, OnSuccessListener<PicturePost> listener) {
+-        this.database.collection(PostRepository.collectionPath).document(id)
+-                .get()
+-                .addOnSuccessListener(document -> {
+-                    PicturePost post = document.toObject(PicturePost.class);
+-                    listener.onSuccess(post);
+-                });
+-    }
+-
+-    public void getAll(OnSuccessListener<List<PicturePost>> listener) {
+-        this.database.collection(PostRepository.collectionPath).get()
+-                .addOnSuccessListener(querySnapshot -> {
+-                    List<PicturePost> posts = querySnapshot.getDocuments().stream().map(documentSnapshot -> {
+-                        return documentSnapshot.toObject(PicturePost.class);
+-                    }).collect(Collectors.toList());
+-
+-                    listener.onSuccess(posts);
+-                });
+-    }
+-
+-    public void getPage(OnSuccessListener<List<PicturePost>> listener, int pageSize, String lastId) {
+-        Query query = this.database.collection(PostRepository.collectionPath)
+-                .orderBy("id") // Must be ordered by the same field we use for the cursor
+-                .limit(pageSize);
+-
+-        // If lastId is not null, start the new fetch AFTER that ID
+-        if (lastId != null && !lastId.isEmpty()) {
+-            query = query.startAfter(lastId);
+-        }
+-
+-        query.get().addOnSuccessListener(querySnapshot -> {
+-            List<PicturePost> posts = querySnapshot.getDocuments().stream().map(documentSnapshot -> {
+-                return documentSnapshot.toObject(PicturePost.class);
+-            }).collect(Collectors.toList());
+-
+-            listener.onSuccess(posts);
+-        });
++public class PostRepository extends SimpleRepository<PicturePost> {
++    public PostRepository() {
++        super(PicturePost.class, "travelshare_picture_posts");
+     }
+ 
+     public void getNearby(double latCenter, double longCenter, double radiusInMeters, OnSuccessListener<List<PicturePost>> listener) {
+@@ -80,7 +40,7 @@ public class PostRepository {
+ 
+         final List<Task<QuerySnapshot>> tasks = new ArrayList<>();
+         for (GeoQueryBounds b : bounds) {
+-            Query query = this.database.collection(PostRepository.collectionPath)
++            Query query = this.database.collection(this.collectionPath)
+                                         .orderBy("location.geohash")
+                                         .startAt(b.startHash)
+                                         .endAt(b.endHash);
+@@ -111,35 +71,4 @@ public class PostRepository {
+                     }
+                 });
+     }
+-
+-    public void putItem(PicturePost item, Uri imageLocalURI) {
+-        DocumentReference document = this.database.collection(PostRepository.collectionPath).document();
+-
+-        String id = document.getId();
+-        item.setId(id);
+-
+-        String filename = id;
+-
+-        //String firebaseImageUri = PostRepository.storagePath + "/" + filename + ".jpg";
+-        //StorageReference firebaseImageRef = storage.getReference().child(firebaseImageUri);
+-
+-        Storage.uploadImage(imageLocalURI, new Storage.OnUploadListener() {
+-            @Override
+-            public void onFailure(String error) {
+-                Log.v("FIREBASE", "Unsuccessful upload");
+-            }
+-            @Override
+-            public void onSuccess(String imageUrl) {
+-                item.setPhoto_URI(imageUrl);
+-
+-                document.set(item)
+-                    .addOnSuccessListener(v ->
+-                        Log.d("FIRESTORE", "Post successfully written: " + document.getId())
+-                    )
+-                        .addOnFailureListener(e ->
+-                                Log.e("FIRESTORE", "Firestore write failed", e)
+-                        );
+-            }
+-        });
+-    }
+ }
+diff --git a/app/src/main/java/com/travel/travelshare/repositories/SimpleRepository.java b/app/src/main/java/com/travel/travelshare/repositories/SimpleRepository.java
+index 8a4a3a0..76501b3 100644
+--- a/app/src/main/java/com/travel/travelshare/repositories/SimpleRepository.java
++++ b/app/src/main/java/com/travel/travelshare/repositories/SimpleRepository.java
+@@ -1,15 +1,14 @@
+ package com.travel.travelshare.repositories;
+ 
++import com.google.android.gms.tasks.OnCompleteListener;
+ import com.google.android.gms.tasks.OnSuccessListener;
++import com.google.android.gms.tasks.Task;
++import com.google.firebase.firestore.DocumentReference;
+ import com.google.firebase.firestore.FirebaseFirestore;
++import com.google.firebase.firestore.Query;
+ import com.travel.travelshare.model.DatabaseItem;
+-import com.travel.travelshare.model.annotation.Tag;
+-import com.travel.travelshare.model.post.Comment;
+-import com.travel.travelshare.model.post.PicturePost;
+-import com.travel.travelshare.model.user.User;
+ 
+ import java.util.List;
+-import java.util.Map;
+ import java.util.stream.Collectors;
+ 
+ public class SimpleRepository<Item extends DatabaseItem> implements IRepository<Item> {
+@@ -48,10 +47,74 @@ public class SimpleRepository<Item extends DatabaseItem> implements IRepository<
+     }
+ 
+     @Override
+-    public void putItem(Item item) {
++    public void getPage(OnSuccessListener<List<Item>> listener, int pageSize, String lastId) {
++        Query query = this.database.collection(this.collectionPath)
++                .orderBy("id")
++                .limit(pageSize);
++
++        if (lastId != null && !lastId.isEmpty()) {
++            query = query.startAfter(lastId);
++        }
++
++        query.get().addOnSuccessListener(querySnapshot -> {
++            List<Item> items = querySnapshot
++                                .getDocuments()
++                                .stream()
++                                .map(documentSnapshot -> {
++                return documentSnapshot.toObject(this.class_);
++            }).collect(Collectors.toList());
++
++            listener.onSuccess(items);
++        });
++    }
++
++    @Override
++    public String putItem(Item item, OnCompleteListener<Void> listener) {
+         String id = item.getId();
+ 
+-        this.database.collection(this.collectionPath).document(id).set(item);
++        Task<Void> task = this.database
++            .collection(this.collectionPath)
++            .document(id)
++            .set(item);
++
++        if (listener != null) {
++            task.addOnCompleteListener(listener);
++        }
++
++        return id;
+     }
+ 
++    @Override
++    public String putItem(String id, Item item, OnCompleteListener<Void> listener) {
++        item.setId(id);
++
++        Task<Void> task = this.database
++                .collection(this.collectionPath)
++                .document(id)
++                .set(item);
++
++        if (listener != null) {
++            task.addOnCompleteListener(listener);
++        }
++
++        return id;
++    }
++
++    @Override
++    public String putItem() {
++        DocumentReference doc = this.database.collection(this.collectionPath).document();
++        String id = doc.getId();
++
++        return id;
++    }
++
++    @Override
++    public String putItem(Item item) {
++        return this.putItem(item, null);
++    }
++
++    @Override
++    public String putItem(String id, Item item) {
++        return this.putItem(id, item, (OnCompleteListener<Void>) null);
++    }
+ }
+diff --git a/app/src/main/java/com/travel/travelshare/repositories/Storage.java b/app/src/main/java/com/travel/travelshare/repositories/Storage.java
+index 31dc56e..f22b2a1 100644
+--- a/app/src/main/java/com/travel/travelshare/repositories/Storage.java
++++ b/app/src/main/java/com/travel/travelshare/repositories/Storage.java
+@@ -36,7 +36,7 @@ public class Storage {
+         void onFailure(String error);
+     }
+ 
+-    public static void uploadImage(Uri filePath, OnUploadListener listener) {
++    public static void uploadImage(Context context, Uri filePath, OnUploadListener listener) {
+         // "android_upload" is the preset you made in the dashboard
+         MediaManager.get().upload(filePath)
+                 .unsigned("travelshare_upload")
+@@ -68,6 +68,6 @@ public class Storage {
+                     @Override
+                     public void onReschedule(String requestId, ErrorInfo error) {}
+                 })
+-                .dispatch();
++                .dispatch(context);
+     }
+ }
+\ No newline at end of file
+diff --git a/app/src/main/java/com/travel/travelshare/ui/publish/PublishFragment.java b/app/src/main/java/com/travel/travelshare/ui/publish/PublishFragment.java
+index bc4cd7e..579eaad 100644
+--- a/app/src/main/java/com/travel/travelshare/ui/publish/PublishFragment.java
++++ b/app/src/main/java/com/travel/travelshare/ui/publish/PublishFragment.java
+@@ -1,7 +1,9 @@
+ package com.travel.travelshare.ui.publish;
+ 
+-import android.icu.text.SimpleDateFormat;
+-import android.icu.util.TimeZone;
++import java.text.SimpleDateFormat;
++
++import java.time.Instant;
++import java.util.TimeZone;
+ import android.net.Uri;
+ import android.os.Bundle;
+ import android.text.Editable;
+@@ -12,9 +14,12 @@ import android.view.View;
+ import android.view.ViewGroup;
+ import android.widget.Button;
+ import android.widget.ImageView;
++import android.widget.Toast;
+ 
+ import androidx.activity.result.ActivityResultLauncher;
++import androidx.activity.result.PickVisualMediaRequest;
+ import androidx.annotation.NonNull;
++import androidx.annotation.Nullable;
+ import androidx.core.content.FileProvider;
+ import androidx.fragment.app.Fragment;
+ import androidx.lifecycle.ViewModelProvider;
+@@ -24,9 +29,13 @@ import com.google.android.material.button.MaterialButton;
+ import com.google.android.material.datepicker.MaterialDatePicker;
+ import com.google.android.material.textfield.TextInputEditText;
+ import com.google.firebase.Timestamp;
++import com.travel.travelshare.LocationPickerDialog;
++import com.travel.travelshare.R;
+ import com.travel.travelshare.databinding.FragmentPublishBinding;
+ import com.travel.travelshare.model.location.ApproximateLocation;
++import com.travel.travelshare.model.location.ExactLocation;
+ import com.travel.travelshare.model.location.Location;
++import com.travel.travelshare.model.location.LocationType;
+ import com.travel.travelshare.model.post.PicturePost;
+ import com.travel.travelshare.repositories.PostRepository;
+ 
+@@ -66,6 +75,7 @@ public class PublishFragment extends Fragment {
+             } else {
+                 Log.v("LOG", "CAMERA_FAILED");
+                 // User cancelled or camera failed
++                this.mViewModel.setPhotoURI(null);
+             }
+         });
+ 
+@@ -84,6 +94,30 @@ public class PublishFragment extends Fragment {
+         });
+     }
+ 
++    public String getFormattedDMS(double coordinate, boolean isLatitude) {
++        double absolute = Math.abs(coordinate);
++        int degrees = (int) absolute;
++
++        double minutesNotTruncated = (absolute - degrees) * 60;
++        int minutes = (int) minutesNotTruncated;
++
++        double seconds = (minutesNotTruncated - minutes) * 60;
++
++        String direction;
++        if (isLatitude) {
++            direction = coordinate >= 0 ? "N" : "S";
++        } else {
++            direction = coordinate >= 0 ? "E" : "W";
++        }
++
++        // Change %.6f to %.2f to round to two decimal places
++        return String.format("%d°%d'%.2f''%s", degrees, minutes, seconds, direction);
++    }
++
++    public String formatToDMS(double latitude, double longitude) {
++        return getFormattedDMS(latitude, true) + " " + getFormattedDMS(longitude, false);
++    }
++
+     public View onCreateView(@NonNull LayoutInflater inflater,
+                              ViewGroup container, Bundle savedInstanceState) {
+         binding = FragmentPublishBinding.inflate(inflater, container, false);
+@@ -96,38 +130,12 @@ public class PublishFragment extends Fragment {
+                     .build();
+ 
+             datePicker.addOnPositiveButtonClickListener(selection -> {
+-                SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
+-                sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+-
+-                String formattedDate = sdf.format(new Date(selection));
+-                binding.publishEditDate.setText(formattedDate);
++                this.mViewModel.setDate(new Date(selection));
+             });
+ 
+             datePicker.show(getParentFragmentManager(), "DATE_PICKER");
+         });
+ 
+-        binding.publishEditDate.addTextChangedListener(new TextWatcher() {
+-            @Override
+-            public void afterTextChanged(Editable s) {
+-                String text = s.toString();
+-
+-                if (text.length() != 10) return; // dd/MM/yyyy = 10 chars
+-
+-                try {
+-                    DateTimeFormatter DATE_FORMATTER;
+-                    LocalDate date = LocalDate.parse(text, PublishFragment.DATE_FORMATTER);
+-                    mViewModel.setDate(date.atStartOfDay());
+-                } catch (Exception e) {
+-                    // Invalid date -> ignore
+-                }
+-            }
+-
+-            @Override
+-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+-            @Override
+-            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+-        });
+-
+         binding.publishEditDescription.addTextChangedListener(new TextWatcher() {
+             @Override
+             public void afterTextChanged(Editable s) {
+@@ -152,23 +160,10 @@ public class PublishFragment extends Fragment {
+             public void onTextChanged(CharSequence s, int start, int before, int count) {}
+         });
+ 
+-        binding.publishEditLocation.addTextChangedListener(new TextWatcher() {
+-            @Override
+-            public void afterTextChanged(Editable s) {
+-                mViewModel.setLocation(s.toString());
+-            }
+-
+-            @Override
+-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+-            @Override
+-            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+-        });
+-
+         binding.publishUploadButton.setOnClickListener(new View.OnClickListener() {
+             @Override
+             public void onClick(View v) {
+-                PublishFragment.this.mViewModel.setPhotoURI(PublishFragment.this.mViewModel.createPhotoUri(getContext()));
+-                PublishFragment.this.pickMediaLauncher.launch(new androidx.activity.result.PickVisualMediaRequest.Builder()
++                PublishFragment.this.pickMediaLauncher.launch(new PickVisualMediaRequest.Builder()
+                         .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly.INSTANCE)
+                         .build());
+             }
+@@ -177,8 +172,11 @@ public class PublishFragment extends Fragment {
+         binding.publishTakePhotoButton.setOnClickListener(new View.OnClickListener() {
+             @Override
+             public void onClick(View v) {
+-                PublishFragment.this.mViewModel.setPhotoURI(PublishFragment.this.mViewModel.createPhotoUri(getContext()));
+-                PublishFragment.this.takePictureLauncher.launch(PublishFragment.this.mViewModel.getPhotoURI().getValue());
++                Uri cameraUri = PublishFragment.this.mViewModel.createTempUri(getContext());
++                if (cameraUri != null) {
++                    PublishFragment.this.mViewModel.setPhotoURI(cameraUri);
++                    PublishFragment.this.takePictureLauncher.launch(cameraUri);
++                }
+             }
+         });
+ 
+@@ -192,28 +190,123 @@ public class PublishFragment extends Fragment {
+         binding.privateToggleButton.setOnClickListener(new View.OnClickListener() {
+             @Override
+             public void onClick(View v) {
+-                PublishFragment.this.mViewModel.setVisibility(false); // set to PUBLIC
++                PublishFragment.this.mViewModel.setVisibility(false); // set to PRIVATE
+             }
+         });
+ 
++        binding.publishEditLocation.setOnClickListener(v -> {
++            LocationPickerDialog locationPicker = new LocationPickerDialog();
++            locationPicker.show(getChildFragmentManager(), "LOCATION_PICKER");
++
++            locationPicker.setLocationResultListener(location -> {
++                if (location.getLocationType() == LocationType.EXACT) {
++                    ExactLocation exact = (ExactLocation) location;
++                    //binding.publishEditLocation.setText(formatToDMS(exact.getLatitude(), exact.getLongitude()));
++                    this.mViewModel.setLocation(exact);
++                } else if (location.getLocationType() == LocationType.APPROXIMATE) {
++                    ApproximateLocation approx = (ApproximateLocation) location;
++                    //binding.publishEditLocation.setText(approx.getName());
++                    this.mViewModel.setLocation(approx);
++                }
++            });
++        });
++
+         binding.publishButton.setOnClickListener(new View.OnClickListener() {
+             @Override
+             public void onClick(View v) {
++                PublishViewModel.ValidationFormStatus status = mViewModel.validateForm();
++
++                switch (status) {
++                    case OK:
++                        PublishFragment.this.mViewModel.saveImagePublication(getContext(), task -> {
++                            if (task.isSuccessful()) {
++                                Toast.makeText(getContext(), "Your post has been uploaded!", Toast.LENGTH_LONG).show();
++                                resetForm();
++                            }
++                            else {
++                                Toast.makeText(getContext(), "Error: Your post could not be uploaded. Check internet connection.", Toast.LENGTH_LONG).show();
++                            }
++                        });
++                        break;
++                    case PICTURE_MISSING:
++                        Toast.makeText(getContext(), "Picture is required", Toast.LENGTH_SHORT).show();
++                        break;
++                    case DATE_MISSING:
++                        Toast.makeText(getContext(), "Date is required", Toast.LENGTH_SHORT).show();
++                        break;
++                    case DESCRIPTION_MISSING:
++                        Toast.makeText(getContext(), "Description is required", Toast.LENGTH_SHORT).show();
++                        break;
++                    case INSTRUCTIONS_MISSING:
++                        Toast.makeText(getContext(), "Instructions are required", Toast.LENGTH_SHORT).show();
++                        break;
++                    case LOCATION_MISSING:
++                        Toast.makeText(getContext(), "Location is required", Toast.LENGTH_SHORT).show();
++                        break;
++                }
+                 // Save image publication
+-                PublishFragment.this.mViewModel.saveImagePublication();
++            }
++        });
++
++        return root;
++    }
++
++    private void resetForm() {
++        this.mViewModel.reset();
++
++    }
++
++    private void checkRequiredFields() {
++        binding.publishButton.setEnabled(
++                mViewModel.getPhotoURI().getValue() != null
++             && mViewModel.getDescription().getValue() != null
++             && !mViewModel.getDescription().getValue().trim().isEmpty()
++             && mViewModel.getInstructions().getValue() != null
++             && !mViewModel.getInstructions().getValue().trim().isEmpty()
++             && mViewModel.getLocation().getValue() != null);
++    }
++
++    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
++        super.onViewCreated(view, savedInstanceState);
++
++        this.mViewModel.getDate().observe(this.getViewLifecycleOwner(), date -> {
++            checkRequiredFields();
++
++            if (date != null) {
++                SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
++                sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
++
++                String formattedDate = sdf.format(date);
++                binding.publishEditDate.setText(formattedDate);
++            }
++            else {
++                binding.publishEditDate.setText("dd/mm/yyyy");
+             }
+         });
+ 
+         this.mViewModel.getPhotoURI().observe(this.getViewLifecycleOwner(), uri -> {
+-            binding.publishImageCardview.setImageTintList(null);
++            checkRequiredFields();
+ 
+-            Glide.with(this)
+-                    .load(uri)
+-                    .centerCrop()
+-                    .into(binding.publishImageCardview);
++            if (uri != null) {
++                binding.publishImageCardview.setImageTintList(null);
++
++                Glide.with(this)
++                        .load(uri)
++                        .centerCrop()
++                        .into(binding.publishImageCardview);
++            }
++            else {
++                Glide.with(this).clear(binding.publishImageCardview);
++
++                binding.publishImageCardview.setImageTintList(null);
++                binding.publishImageCardview.setImageResource(R.drawable.image_48px);
++                binding.publishImageCardview.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
++            }
+         });
+ 
+         this.mViewModel.getVisibility().observe(this.getViewLifecycleOwner(), is_public -> {
++            checkRequiredFields();
++
+             if (is_public != binding.publicToggleButton.isChecked()) {
+                 binding.publicToggleButton.setChecked(is_public);
+             }
+@@ -222,30 +315,54 @@ public class PublishFragment extends Fragment {
+             }
+         });
+ 
+-        /*
+-        this.mViewModel.getDate().observe(this.getViewLifecycleOwner(), date -> {
+-            String dateAsString = DateTimeFormatter.ofPattern("dd/MM/yyyy").format(date);
++        this.mViewModel.getDescription().observe(this.getViewLifecycleOwner(), description -> {
++            checkRequiredFields();
+ 
+-            if (!dateAsString.equals(binding.publishEditDate.getText().toString())) {
+-                binding.publishEditDate.setText(dateAsString);
++            if (description == null) {
++                binding.publishEditDescription.setText("");
++            }
++            else if (!description.equals(binding.publishEditDescription.getText().toString())) {
++                binding.publishEditDescription.setText(description);
+             }
+         });
+ 
+-         */
++        this.mViewModel.getInstructions().observe(this.getViewLifecycleOwner(), instructions -> {
++            checkRequiredFields();
+ 
+-        this.mViewModel.getDescription().observe(this.getViewLifecycleOwner(), description -> {
+-            if (!description.equals(binding.publishEditDescription.getText().toString())) {
+-                binding.publishEditDescription.setText(description);
++            if (instructions == null) {
++                binding.publishEditInstructions.setText("");
++            }
++            else if (!instructions.equals(binding.publishEditInstructions.getText().toString())) {
++                binding.publishEditInstructions.setText(instructions);
+             }
+         });
+ 
+-        this.mViewModel.getLocation().observe(this.getViewLifecycleOwner(), location -> {
+-            if (!location.equals(binding.publishEditLocation.getText().toString())) {
+-                binding.publishEditLocation.setText(this.mViewModel.getLocation().getValue());
++        this.mViewModel.getLocation().observe(getViewLifecycleOwner(), location -> {
++            checkRequiredFields();
++
++            if (location != null) {
++                switch (location.getLocationType()) {
++                    case EXACT:
++                        binding.publishEditLocation.setText(formatToDMS(
++                                location.getLatitude(),
++                                location.getLongitude()
++                        ));
++                        break;
++                    case APPROXIMATE:
++                        binding.publishEditLocation.setText(String.format("%s, %s, %s, %s",
++                                location.getName(),
++                                location.getCity(),
++                                location.getRegion(),
++                                location.getCountry()
++                        ));
++                        break;
++                }
++            }
++            else {
++                binding.publishEditLocation.setText("");
+             }
+         });
+ 
+-        return root;
+     }
+ 
+     @Override
+diff --git a/app/src/main/java/com/travel/travelshare/ui/publish/PublishViewModel.java b/app/src/main/java/com/travel/travelshare/ui/publish/PublishViewModel.java
+index bcc9d0c..8238987 100644
+--- a/app/src/main/java/com/travel/travelshare/ui/publish/PublishViewModel.java
++++ b/app/src/main/java/com/travel/travelshare/ui/publish/PublishViewModel.java
+@@ -11,6 +11,8 @@ import androidx.lifecycle.MutableLiveData;
+ import androidx.lifecycle.SavedStateHandle;
+ import androidx.lifecycle.ViewModel;
+ 
++import com.google.android.gms.tasks.OnCompleteListener;
++import com.google.android.gms.tasks.Task;
+ import com.google.firebase.Firebase;
+ import com.google.firebase.Timestamp;
+ import com.google.firebase.auth.FirebaseAuth;
+@@ -19,12 +21,15 @@ import com.travel.travelshare.model.location.Location;
+ import com.travel.travelshare.model.post.PicturePost;
+ import com.travel.travelshare.model.user.User;
+ import com.travel.travelshare.repositories.PostRepository;
++import com.travel.travelshare.repositories.Storage;
+ import com.travel.travelshare.repositories.UserRepository;
+ 
+ import java.io.File;
+ import java.io.IOException;
+ import java.time.Instant;
++import java.time.LocalDate;
+ import java.time.LocalDateTime;
++import java.time.ZoneOffset;
+ import java.util.Date;
+ import java.util.Locale;
+ import java.util.concurrent.Executor;
+@@ -32,11 +37,11 @@ import java.util.concurrent.Executor;
+ public class PublishViewModel extends ViewModel {
+     private static final String PHOTO_KEY_URI = "photo_uri";
+     private static final String VISIBILITY_KEY_URI = "is_public";
+-    private static final String DATE_KEY_URI = "date";
+     private static final String DESCRIPTION_KEY_URI = "description";
+     private static final String INSTRUCTION_KEY_URI = "instructions";
+-    private static final String LOCATION_KEY_URI = "location";
+ 
++    private final MutableLiveData<Location> location = new MutableLiveData<>();
++    private final MutableLiveData<Date> date = new MutableLiveData<>();
+     private final MutableLiveData<User> activeUser = new MutableLiveData<>();
+ 
+     private final SavedStateHandle savedStateHandle;
+@@ -57,6 +62,8 @@ public class PublishViewModel extends ViewModel {
+         this.loadUser();
+ 
+         this.setVisibility(true); // prevents crash
++
++        this.setDate(Date.from(Instant.now()));
+     }
+     public void setPhotoURI(Uri value) {
+         savedStateHandle.set(PHOTO_KEY_URI, value);
+@@ -72,11 +79,11 @@ public class PublishViewModel extends ViewModel {
+         return savedStateHandle.getLiveData(VISIBILITY_KEY_URI);
+     }
+ 
+-    public void setDate(LocalDateTime date) {
+-        savedStateHandle.set(DATE_KEY_URI, date);
++    public void setDate(Date date) {
++        this.date.setValue(date);
+     }
+-    public LiveData<LocalDateTime> getDate() {
+-        return savedStateHandle.getLiveData(DATE_KEY_URI);
++    public LiveData<Date> getDate() {
++        return this.date;
+     }
+ 
+     public void setDescription(String description) {
+@@ -93,11 +100,11 @@ public class PublishViewModel extends ViewModel {
+         return savedStateHandle.getLiveData(INSTRUCTION_KEY_URI);
+     }
+ 
+-    public void setLocation(String location) {
+-        savedStateHandle.set(LOCATION_KEY_URI, location);
++    public void setLocation(Location location) {
++        this.location.setValue(location);
+     }
+-    public LiveData<String> getLocation() {
+-        return savedStateHandle.getLiveData(LOCATION_KEY_URI);
++    public LiveData<Location> getLocation() {
++        return this.location;
+     }
+ 
+     public User getActiveUser() {
+@@ -114,7 +121,7 @@ public class PublishViewModel extends ViewModel {
+         });
+     }
+ 
+-    public void saveImagePublication() {
++    public void saveImagePublication(Context context, OnCompleteListener<Void> listener) {
+         Uri imageUri = this.getPhotoURI().getValue();
+         if (imageUri == null) {
+             Log.e("PublishViewModel", "No image selected!");
+@@ -125,7 +132,7 @@ public class PublishViewModel extends ViewModel {
+ 
+         Timestamp timestamp;
+         try {
+-            timestamp = new Timestamp(Instant.from(this.getDate().getValue()));
++            timestamp = new Timestamp(this.getDate().getValue().toInstant());
+         } catch (Exception e) {
+             timestamp = new Timestamp(0, 0);
+         }
+@@ -133,33 +140,70 @@ public class PublishViewModel extends ViewModel {
+         Timestamp date = timestamp;
+         String description = this.getDescription().getValue();
+         String instructions = this.getInstructions().getValue();
+-        Location location = new ApproximateLocation(
+-                this.getLocation().getValue(),
+-                "city",
+-                "region",
+-                "country",
+-                0.0,
+-                0.0,
+-                "s0000"
+-        );
++        Location location = this.getLocation().getValue();
+ 
+         Timestamp createdAt = Timestamp.now();
+ 
+-        PicturePost picturePost = new PicturePost(
+-                getActiveUser().getId(),
+-                imageUri.toString(),
+-                description,
+-                instructions,
+-                date,
+-                createdAt,
+-                visibility,
+-                location
+-        );
++        String id = this.postRepository.putItem();
++        Storage.uploadImage(context, imageUri, new Storage.OnUploadListener() {
++            @Override
++            public void onFailure(String error) {
++                Log.v("FIREBASE", "Unsuccessful upload");
++            }
++            @Override
++            public void onSuccess(String imageUrl) {
++                PicturePost picturePost = new PicturePost(
++                        getActiveUser().getId(),
++                        imageUrl,
++                        description,
++                        instructions,
++                        date,
++                        createdAt,
++                        visibility,
++                        location
++                );
++
++                postRepository.putItem(id, picturePost, listener);
++            }
++        });
++    }
++
++    public enum ValidationFormStatus {
++        PICTURE_MISSING,
++        DATE_MISSING,
++        DESCRIPTION_MISSING,
++        INSTRUCTIONS_MISSING,
++        LOCATION_MISSING,
++        OK
++    }
++
++    public ValidationFormStatus validateForm() {
++        if (this.getPhotoURI().getValue() == null)
++            return ValidationFormStatus.PICTURE_MISSING;
++
++        if (this.getDescription().getValue() == null)
++            return ValidationFormStatus.DESCRIPTION_MISSING;
++
++        if (this.getInstructions().getValue() == null)
++            return ValidationFormStatus.INSTRUCTIONS_MISSING;
++
++        if (this.getLocation().getValue() == null)
++            return ValidationFormStatus.LOCATION_MISSING;
++
++        return ValidationFormStatus.OK;
++    }
+ 
+-        this.postRepository.putItem(picturePost, imageUri);
++    public void reset() {
++        this.setVisibility(true);
++        this.setInstructions(null);
++        this.setDescription(null);
++        this.setDate(Date.from(Instant.now()));
++        this.setPhotoURI(null);
++        this.setLocation(null);
+     }
+ 
+-    public Uri createPhotoUri(Context context) {
++    // not the role of the View Model
++    public Uri createTempUri(Context context) {
+         try {
+             String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(new Date());
+             String imageFileName = "JPEG_" + timeStamp + "_";
+diff --git a/app/src/main/res/layout/dialog_location_picker.xml b/app/src/main/res/layout/dialog_location_picker.xml
+new file mode 100644
+index 0000000..57bf9ba
+--- /dev/null
++++ b/app/src/main/res/layout/dialog_location_picker.xml
+@@ -0,0 +1,155 @@
++<LinearLayout
++    xmlns:android="http://schemas.android.com/apk/res/android"
++    xmlns:app="http://schemas.android.com/apk/res-auto"
++    android:layout_width="match_parent"
++    android:layout_height="wrap_content"
++    android:orientation="vertical">
++
++    <com.google.android.material.tabs.TabLayout
++        android:id="@+id/location_tabs"
++        android:layout_width="match_parent"
++        android:layout_height="wrap_content"
++        app:tabMode="fixed">
++
++        <com.google.android.material.tabs.TabItem
++            android:layout_width="wrap_content"
++            android:layout_height="wrap_content"
++            android:text="Precise" />
++
++        <com.google.android.material.tabs.TabItem
++            android:layout_width="wrap_content"
++            android:layout_height="wrap_content"
++            android:text="Approximate" />
++    </com.google.android.material.tabs.TabLayout>
++
++    <FrameLayout
++        android:id="@+id/tab_container"
++        android:layout_width="match_parent"
++        android:layout_height="350dp"
++        android:padding="16dp">
++
++        <LinearLayout
++            android:id="@+id/view_precise"
++            android:layout_width="match_parent"
++            android:layout_height="match_parent"
++            android:orientation="vertical">
++            <org.osmdroid.views.MapView
++                android:id="@+id/map_picker"
++                android:layout_width="match_parent"
++                android:layout_height="match_parent" />
++        </LinearLayout>
++
++        <LinearLayout
++            android:id="@+id/view_approximate"
++            android:layout_width="match_parent"
++            android:layout_height="match_parent"
++            android:visibility="gone"
++            android:orientation="vertical">
++
++            <com.google.android.material.textfield.TextInputLayout
++                android:id="@+id/picker_layout_location_name"
++                android:layout_width="match_parent"
++                android:layout_height="wrap_content"
++                android:hint="Name"
++
++                app:boxBackgroundMode="outline"
++                app:boxStrokeColor="?attr/colorPrimary"
++                app:boxStrokeWidth="2dp"
++                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
++
++                android:layout_marginStart="16dp"
++                android:layout_marginTop="4dp"
++                android:layout_marginEnd="8dp"
++                android:layout_marginBottom="8dp">
++
++                <com.google.android.material.textfield.TextInputEditText
++                    android:id="@+id/picker_location_name"
++                    android:layout_width="match_parent"
++                    android:layout_height="wrap_content"
++
++                    android:inputType="text"/>
++            </com.google.android.material.textfield.TextInputLayout>
++
++            <com.google.android.material.textfield.TextInputLayout
++                android:id="@+id/picker_layout_location_city"
++                android:layout_width="match_parent"
++                android:layout_height="wrap_content"
++                android:hint="City"
++
++                app:boxBackgroundMode="outline"
++                app:boxStrokeColor="?attr/colorPrimary"
++                app:boxStrokeWidth="2dp"
++                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
++
++                android:layout_marginStart="16dp"
++                android:layout_marginTop="4dp"
++                android:layout_marginEnd="8dp"
++                android:layout_marginBottom="8dp">
++
++                <com.google.android.material.textfield.TextInputEditText
++                    android:id="@+id/picker_location_city"
++                    android:layout_width="match_parent"
++                    android:layout_height="wrap_content"
++
++                    android:inputType="text"/>
++            </com.google.android.material.textfield.TextInputLayout>
++
++            <com.google.android.material.textfield.TextInputLayout
++                android:id="@+id/picker_layout_location_region"
++                android:layout_width="match_parent"
++                android:layout_height="wrap_content"
++                android:hint="Region"
++
++                app:boxBackgroundMode="outline"
++                app:boxStrokeColor="?attr/colorPrimary"
++                app:boxStrokeWidth="2dp"
++                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
++
++                android:layout_marginStart="16dp"
++                android:layout_marginTop="4dp"
++                android:layout_marginEnd="8dp"
++                android:layout_marginBottom="8dp">
++
++                <com.google.android.material.textfield.TextInputEditText
++                    android:id="@+id/picker_location_region"
++                    android:layout_width="match_parent"
++                    android:layout_height="wrap_content"
++
++                    android:inputType="text"/>
++            </com.google.android.material.textfield.TextInputLayout>
++
++
++            <com.google.android.material.textfield.TextInputLayout
++                android:id="@+id/picker_layout_location_country"
++                android:layout_width="match_parent"
++                android:layout_height="wrap_content"
++                android:hint="Country"
++
++                app:boxBackgroundMode="outline"
++                app:boxStrokeColor="?attr/colorPrimary"
++                app:boxStrokeWidth="2dp"
++                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
++
++                android:layout_marginStart="16dp"
++                android:layout_marginTop="4dp"
++                android:layout_marginEnd="8dp"
++                android:layout_marginBottom="8dp">
++
++                <com.google.android.material.textfield.TextInputEditText
++                    android:id="@+id/picker_location_country"
++                    android:layout_width="match_parent"
++                    android:layout_height="wrap_content"
++
++                    android:inputType="text"/>
++            </com.google.android.material.textfield.TextInputLayout>
++
++        </LinearLayout>
++    </FrameLayout>
++
++    <Button
++        android:id="@+id/btn_confirm"
++        android:layout_width="match_parent"
++        android:layout_height="wrap_content"
++        android:text="Confirm Selection"
++        android:layout_margin="16dp" />
++</LinearLayout>
+\ No newline at end of file
+diff --git a/app/src/main/res/layout/fragment_publish.xml b/app/src/main/res/layout/fragment_publish.xml
+index a551ff4..0a321a4 100644
+--- a/app/src/main/res/layout/fragment_publish.xml
++++ b/app/src/main/res/layout/fragment_publish.xml
+@@ -250,7 +250,11 @@
+                 android:id="@+id/publish_edit_location"
+                 android:layout_width="match_parent"
+                 android:layout_height="wrap_content"
++
+                 android:clickable="true"
++                android:focusable="false"
++                android:cursorVisible="false"
++
+                 android:inputType="text"/>
+         </com.google.android.material.textfield.TextInputLayout>
+ 
