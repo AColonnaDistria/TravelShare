@@ -107,9 +107,21 @@ public class DiscoverFragment extends Fragment {
                 }
             }
         });
-        this.fetchNextPage();
+
+        if (mViewModel.getLastId().getValue() == null) {
+            this.fetchNextPage();
+        }
 
         return root;
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
+        mViewModel.getPosts().observe(getViewLifecycleOwner(), currentPosts -> {
+            if (mosaicAdapter.getItemCount() == 0 && !currentPosts.isEmpty()) {
+                mosaicAdapter.addPosts(currentPosts);
+            }
+        });
     }
 
     private void fetchNextPage() {

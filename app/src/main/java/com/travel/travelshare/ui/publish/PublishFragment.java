@@ -2,7 +2,6 @@ package com.travel.travelshare.ui.publish;
 
 import java.text.SimpleDateFormat;
 
-import java.time.Instant;
 import java.util.TimeZone;
 import android.net.Uri;
 import android.os.Bundle;
@@ -12,7 +11,6 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Toast;
 
@@ -20,31 +18,22 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.PickVisualMediaRequest;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.core.content.FileProvider;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.bumptech.glide.Glide;
-import com.google.android.material.button.MaterialButton;
 import com.google.android.material.datepicker.MaterialDatePicker;
-import com.google.android.material.textfield.TextInputEditText;
-import com.google.firebase.Timestamp;
-import com.travel.travelshare.LocationPickerDialog;
+import com.travel.travelshare.ui.dialog.DialogDescriptionInput;
+import com.travel.travelshare.ui.dialog.DialogInstructionsInput;
+import com.travel.travelshare.ui.dialog.LocationPickerDialog;
 import com.travel.travelshare.R;
 import com.travel.travelshare.databinding.FragmentPublishBinding;
 import com.travel.travelshare.model.location.ApproximateLocation;
 import com.travel.travelshare.model.location.ExactLocation;
-import com.travel.travelshare.model.location.Location;
 import com.travel.travelshare.model.location.LocationType;
-import com.travel.travelshare.model.post.PicturePost;
-import com.travel.travelshare.repositories.PostRepository;
 
 import androidx.activity.result.contract.ActivityResultContracts;
 
-import java.io.File;
-import java.io.IOException;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.Locale;
@@ -193,6 +182,25 @@ public class PublishFragment extends Fragment {
                 PublishFragment.this.mViewModel.setVisibility(false); // set to PRIVATE
             }
         });
+
+        binding.publishEditDescription.setOnClickListener(v -> {
+            DialogDescriptionInput dialogInput = DialogDescriptionInput.newInstance(this.mViewModel.getDescription().getValue());
+            dialogInput.show(getChildFragmentManager(), "DESCRIPTION_INPUT");
+
+            dialogInput.setDescriptionResultListener(description -> {
+                this.mViewModel.setDescription(description);
+            });
+        });
+
+        binding.publishEditInstructions.setOnClickListener(v -> {
+            DialogInstructionsInput dialogInput = DialogInstructionsInput.newInstance(this.mViewModel.getInstructions().getValue());
+            dialogInput.show(getChildFragmentManager(), "INSTRUCTIONS_INPUT");
+
+            dialogInput.setInstructionsResultListener(instructions -> {
+                this.mViewModel.setInstructions(instructions);
+            });
+        });
+
 
         binding.publishEditLocation.setOnClickListener(v -> {
             LocationPickerDialog locationPicker = new LocationPickerDialog();

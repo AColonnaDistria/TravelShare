@@ -83,6 +83,7 @@ dependencies {
     //implementation(libs.firebase.storage)
     implementation("com.cloudinary:cloudinary-android:2.5.0")
     implementation(libs.firebase.firestore)
+    implementation(libs.places)
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)

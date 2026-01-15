@@ -14,12 +14,12 @@
         <com.google.android.material.tabs.TabItem
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Precise" />
+            android:text="Map" />
 
         <com.google.android.material.tabs.TabItem
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Approximate" />
+            android:text="Address" />
     </com.google.android.material.tabs.TabLayout>
 
     <FrameLayout
@@ -150,6 +150,6 @@
         android:id="@+id/btn_confirm"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Confirm Selection"
+        android:text="Confirm"
         android:layout_margin="16dp" />
 </LinearLayout>

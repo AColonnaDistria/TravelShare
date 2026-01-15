@@ -8,6 +8,7 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.travel.travelshare.model.post.PicturePost;
 import com.travel.travelshare.repositories.PostRepository;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -15,6 +16,7 @@ public class MosaicLoaderViewModel extends ViewModel {
     protected MutableLiveData<Boolean> isLoading = new MutableLiveData<>();
     protected MutableLiveData<Boolean> isLastPage = new MutableLiveData<>();
     protected MutableLiveData<String> lastId = new MutableLiveData<>();
+    protected MutableLiveData<ArrayList<PicturePost>> posts = new MutableLiveData<>(new ArrayList<>());
 
     protected PostRepository postRepository;
 
@@ -24,6 +26,10 @@ public class MosaicLoaderViewModel extends ViewModel {
         this.setIsLoading(false);
         this.setIsLastPage(false);
         this.setLastId(null);
+    }
+
+    public MutableLiveData<ArrayList<PicturePost>> getPosts() {
+        return this.posts;
     }
 
     public MutableLiveData<Boolean> getIsLoading() {
@@ -59,13 +65,22 @@ public class MosaicLoaderViewModel extends ViewModel {
 
         this.setIsLoading(true);
 
-        this.postRepository.getPage(picturePosts -> {
-            if (picturePosts == null || picturePosts.isEmpty()) {
+        this.postRepository.getPage(newPosts -> {
+            if (newPosts == null || newPosts.isEmpty()) {
                 setIsLastPage(true);
             }
-            else {
-                listener.onSuccess(picturePosts);
-                this.setLastId(picturePosts.get(picturePosts.size() - 1).getId());
+            else
+            {
+                ArrayList<PicturePost> currentList = posts.getValue();
+                if (currentList == null) currentList = new ArrayList<>();
+
+                currentList.addAll(newPosts);
+                posts.setValue(currentList);
+                this.setLastId(newPosts.get(newPosts.size() - 1).getId());
+
+                if (listener != null) {
+                    listener.onSuccess(newPosts);
+                }
             }
             this.setIsLoading(false);
         }, 16, this.getLastId().getValue());
