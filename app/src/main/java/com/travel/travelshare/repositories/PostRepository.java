@@ -19,6 +19,7 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.travel.travelshare.model.post.PicturePost;
+import com.travel.travelshare.model.post.SharedTo;
 import com.travel.travelshare.model.user.Report;
 
 import java.util.ArrayList;

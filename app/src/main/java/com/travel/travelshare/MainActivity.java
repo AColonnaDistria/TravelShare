@@ -33,6 +33,7 @@ import com.travel.travelshare.model.user.UserType;
 import com.travel.travelshare.repositories.Storage;
 import com.travel.travelshare.repositories.UserRepository;
 import com.travel.travelshare.ui.cardview.CardViewActivity;
+import com.travel.travelshare.ui.groups.GroupActivity;
 import com.travel.travelshare.ui.likes.LikesActivity;
 import com.travel.travelshare.ui.likes.LikesViewModel;
 
@@ -166,13 +167,16 @@ public class MainActivity extends AppCompatActivity {
             }
             else if (id == R.id.action_groups) {
                 // Handle Groups logic
+
+                Intent intent = new Intent(MainActivity.this, GroupActivity.class);
+                startActivity(intent);
+
                 return true;
             }
             else if (id == R.id.action_likes) {
                 // Handle Likes logic
 
                 Intent intent = new Intent(MainActivity.this, LikesActivity.class);
-
                 startActivity(intent);
 
                 return true;

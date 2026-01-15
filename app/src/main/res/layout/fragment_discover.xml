@@ -6,21 +6,58 @@
     android:layout_height="match_parent"
     tools:context=".ui.discover.DiscoverFragment">
 
-    <fragment
-        android:id="@+id/fragment_search_bar"
-        android:name="com.travel.travelshare.ui.elements.SearchBarFragment"
+    <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
-        android:layout_height="64dp"
+        android:layout_height="wrap_content"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"/>
+        android:id="@+id/discover_search_bar_layout">
+
+        <EditText
+            android:id="@+id/discover_search_bar"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:background="@drawable/search_bar_background"
+
+            android:hint="@string/search_bar_hint"
+            android:ellipsize="end"
+            android:scrollHorizontally="true"
+
+            android:maxLines="1"
+
+            android:drawableStart="@drawable/menu_24px"
+            android:drawableEnd="@drawable/search_24px"
+            android:drawablePadding="16dp"
+
+            android:textColorHint="#49454f"
+
+            android:paddingStart="20dp"
+            android:paddingEnd="22dp"
+
+            android:clickable="true"
+            android:focusable="false"
+            android:cursorVisible="false"
+
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginBottom="8dp"
+            />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
     <fragment
         android:id="@+id/fragment_chip_filter"
         android:name="com.travel.travelshare.ui.elements.ChipFilterFragment"
         android:layout_width="match_parent"
         android:layout_height="48dp"
-        app:layout_constraintTop_toBottomOf="@id/fragment_search_bar"
+        app:layout_constraintTop_toBottomOf="@id/discover_search_bar_layout"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"/>
 
