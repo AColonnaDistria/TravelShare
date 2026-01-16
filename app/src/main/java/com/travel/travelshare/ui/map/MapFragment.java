@@ -1,6 +1,9 @@
 package com.travel.travelshare.ui.map;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.graphics.drawable.Drawable;
 import android.icu.text.SimpleDateFormat;
 import android.os.Bundle;
 import android.util.Log;
@@ -9,12 +12,15 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.Timestamp;
 import com.travel.travelshare.MainActivity;
+import com.travel.travelshare.R;
 import com.travel.travelshare.databinding.FragmentMapBinding;
 import com.travel.travelshare.model.post.PicturePost;
 import com.travel.travelshare.model.user.User;
@@ -31,6 +37,9 @@ import org.osmdroid.events.ZoomEvent;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.Marker;
+import org.osmdroid.views.overlay.TilesOverlay;
+import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider;
+import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
 
 import java.util.Date;
 import java.util.List;
@@ -56,6 +65,9 @@ public class MapFragment extends Fragment {
             marker.setPosition(point);
             marker.setTitle(post.getLocation().getName());
             marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
+
+            Drawable icon = ContextCompat.getDrawable(getContext(), R.drawable.map_marker);
+            marker.setIcon(icon);
 
             marker.setOnMarkerClickListener(new Marker.OnMarkerClickListener() {
                 @Override
@@ -122,12 +134,43 @@ public class MapFragment extends Fragment {
 
         map.setMinZoomLevel(4.0);
         map.setMaxZoomLevel(20.0);
+        map.setBuiltInZoomControls(false);
 
         this.mapController = map.getController();
         mapController.setZoom(15.0);
 
         GeoPoint startPoint = new GeoPoint(48.8583, 2.2944);
         mapController.setCenter(startPoint);
+
+        // Set the center as location
+
+        if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+
+            ActivityCompat.requestPermissions(getActivity(),
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
+        } else {
+            GpsMyLocationProvider provider = new GpsMyLocationProvider(requireContext());
+            MyLocationNewOverlay myLocationOverlay = new MyLocationNewOverlay(provider, map);
+            myLocationOverlay.enableMyLocation();
+
+            myLocationOverlay.runOnFirstFix(new Runnable() {
+                @Override
+                public void run() {
+                    final GeoPoint myLocation = myLocationOverlay.getMyLocation();
+                    if (myLocation != null) {
+                        requireActivity().runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                map.getController().animateTo(myLocation);
+                                map.getController().setZoom(15.0); // Set a closer zoom level
+                            }
+                        });
+                    }
+                }
+            });
+            map.getOverlays().add(myLocationOverlay);
+        }
 
         map.addMapListener(new DelayedMapListener(new MapListener() {
             @Override

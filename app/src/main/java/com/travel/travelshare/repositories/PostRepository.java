@@ -62,6 +62,7 @@ public class PostRepository extends SimpleRepository<PicturePost> {
 
     public void getPagePublic(OnSuccessListener<List<PicturePost>> listener, int pageSize, String lastId) {
         Query query = this.database.collection(this.collectionPath)
+                .whereEqualTo("visibility", true)
                 .orderBy("id")
                 .limit(pageSize);
 
