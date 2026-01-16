@@ -15,9 +15,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class TravelPath_SimpleRepository<Item extends DatabaseItem> implements IRepository<Item> {
-    private TravelPath_Firebase travelpath_firebase;
-    private FirebaseFirestore database;
-    private final Class<Item> class_;
+    protected TravelPath_Firebase travelpath_firebase;
+    protected FirebaseFirestore database;
+    protected final Class<Item> class_;
     protected final String collectionPath;
 
     public TravelPath_SimpleRepository(Context context, Class<Item> class_, String collectionPath) {

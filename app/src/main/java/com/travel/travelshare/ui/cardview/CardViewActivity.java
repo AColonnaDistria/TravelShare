@@ -1,5 +1,6 @@
 package com.travel.travelshare.ui.cardview;
 
+import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.media.Image;
 import android.net.Uri;
@@ -7,6 +8,7 @@ import android.os.Bundle;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
 import android.text.style.ImageSpan;
+import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -15,6 +17,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -22,15 +25,20 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.Timestamp;
 import com.travel.travelshare.Auth;
 import com.travel.travelshare.R;
+import com.travel.travelshare.model.post.PicturePost;
+import com.travel.travelshare.model.travelpath.TravelPath_Activity;
 import com.travel.travelshare.model.user.Like;
 import com.travel.travelshare.repositories.LikeRepository;
 import com.travel.travelshare.repositories.PostRepository;
+import com.travel.travelshare.repositories.travelpath.TravelPath_ActivityRepository;
 import com.travel.travelshare.ui.elements.ReturnBarFragment;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Locale;
+import java.util.stream.Collectors;
 
 public class CardViewActivity extends AppCompatActivity implements ReturnBarFragment.OnCloseRequestedListener {
     private ImageView imageCardView;
@@ -250,6 +258,49 @@ public class CardViewActivity extends AppCompatActivity implements ReturnBarFrag
                 });
             }
         });
+
+        double lat = getIntent().getDoubleExtra("LATITUDE", 0);
+        double lon = getIntent().getDoubleExtra("LONGITUDE", 0);
+
+        if (lat != 0 && lon != 0) {
+            loadNearbyActivities(lat, lon);
+        }
+    }
+
+    private void loadNearbyActivities(double lat, double lon) {
+        TravelPath_ActivityRepository activityRepo = new TravelPath_ActivityRepository(this);
+        activityRepo.getNearbyActivities(lat, lon, 5000, activities -> {
+            // 'activities' contient maintenant les TravelPath_Activity à moins de 5km
+            updateCarousel(activities);
+        });
+    }
+
+    private void updateCarousel(List<TravelPath_Activity> activities) {
+        RecyclerView recyclerView = findViewById(R.id.recycler_nearby_activities);
+        TextView titleView = findViewById(R.id.title_nearby_activities);
+
+        if (activities.isEmpty()) {
+            titleView.setVisibility(View.GONE);
+            recyclerView.setVisibility(View.GONE);
+            return;
+        }
+
+        titleView.setVisibility(View.VISIBLE);
+        recyclerView.setVisibility(View.VISIBLE);
+
+        // Utilisation d'un adaptateur anonyme pour plus de rapidité
+        // (Ou créez une classe NearbyAdapter séparée)
+        NearbyActivitiesAdapter adapter = new NearbyActivitiesAdapter(activities, activity -> {
+            // Action au clic : Ouvrir Google Maps
+            double aLat = activity.getLocalisation().get(0);
+            double aLon = activity.getLocalisation().get(1);
+            Uri gmmIntentUri = Uri.parse("google.navigation:q=" + aLat + "," + aLon);
+            Intent mapIntent = new Intent(Intent.ACTION_VIEW, gmmIntentUri);
+            mapIntent.setPackage("com.google.android.apps.maps");
+            startActivity(mapIntent);
+        });
+
+        recyclerView.setAdapter(adapter);
     }
 
     private void setIconTextView(TextView textView, String fullText, int imageResId) {

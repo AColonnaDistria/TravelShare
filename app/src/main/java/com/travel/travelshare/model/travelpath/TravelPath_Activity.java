@@ -8,6 +8,7 @@ public class TravelPath_Activity implements DatabaseItem {
     private String nom;
     private String geohash;
     private String photo;
+    private String photo_claire;
     private String telephone;
     private String description;
     private Double prix;
@@ -29,6 +30,9 @@ public class TravelPath_Activity implements DatabaseItem {
 
     public String getPhoto() { return photo; }
     public void setPhoto(String photo) { this.photo = photo; }
+
+    public String getPhoto_claire() { return photo_claire; }
+    public void setPhoto_claire(String photo_claire) { this.photo_claire = photo_claire; }
 
     public String getTelephone() { return telephone; }
     public void setTelephone(String telephone) { this.telephone = telephone; }

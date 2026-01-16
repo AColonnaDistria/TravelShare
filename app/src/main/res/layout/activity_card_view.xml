@@ -171,6 +171,7 @@
         android:paddingLeft="16dp"
         android:paddingRight="16dp"
         android:paddingTop="32dp"
+        android:textSize="20sp"
 
         app:layout_constraintTop_toBottomOf="@id/first_description_image_card_view_layout"
         app:layout_constraintLeft_toLeftOf="parent"
@@ -194,6 +195,7 @@
         android:layout_height="wrap_content"
         android:paddingLeft="16dp"
         android:paddingRight="16dp"
+        android:textSize="20sp"
         android:paddingTop="32dp"
 
         app:layout_constraintTop_toBottomOf="@id/description_image_card_view_layout"
@@ -210,4 +212,23 @@
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent" />
     </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <TextView
+        android:id="@+id/title_nearby_activities"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Activités à proximité"
+        android:textStyle="bold"
+        android:padding="16dp"
+        app:layout_constraintTop_toBottomOf="@id/instructions_image_card_view_layout"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recycler_nearby_activities"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+        app:layout_constraintTop_toBottomOf="@id/title_nearby_activities"
+        tools:listitem="@layout/item_discover" />
 </androidx.constraintlayout.widget.ConstraintLayout>

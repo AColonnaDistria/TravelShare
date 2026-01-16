@@ -70,6 +70,8 @@ public class DiscoverFragment extends Fragment {
                 intent.putExtra("IS_PUBLIC", post.getVisibility());
                 intent.putExtra("PUBLISH_DATE", dateStr);
                 intent.putExtra("LOCATION_NAME", post.getLocation().getName());
+                intent.putExtra("LATITUDE", post.getLocation().getLatitude());
+                intent.putExtra("LONGITUDE", post.getLocation().getLongitude());
                 intent.putExtra("AUTHOR", post.getAuthorId());
 
                 startActivity(intent);
