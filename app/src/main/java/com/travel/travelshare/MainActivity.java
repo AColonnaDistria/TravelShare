@@ -161,11 +161,12 @@ public class MainActivity extends AppCompatActivity {
         popup.setOnMenuItemClickListener(item -> {
             int id = item.getItemId();
 
+            /*
             if (id == R.id.action_profile) {
                 // Handle Open Profile
                 return true;
-            }
-            else if (id == R.id.action_groups) {
+             */
+            if (id == R.id.action_groups) {
                 // Handle Groups logic
 
                 Intent intent = new Intent(MainActivity.this, GroupActivity.class);
