@@ -85,7 +85,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
         binding.profile.setOnClickListener(this::showProfileMenu);
-        binding.notifications.setOnClickListener(this::showNotificationMenu);
+        //binding.notifications.setOnClickListener(this::showNotificationMenu);
 
         this.mViewModel.getPageTitle().observe(this, page_title -> {
             binding.pageTitle.setText(page_title);

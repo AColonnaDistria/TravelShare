@@ -1,6 +1,7 @@
 package com.travel.travelshare.ui.cardview;
 
 import android.graphics.drawable.Drawable;
+import android.media.Image;
 import android.net.Uri;
 import android.os.Bundle;
 import android.text.Spannable;
@@ -9,12 +10,21 @@ import android.text.style.ImageSpan;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
 import com.bumptech.glide.Glide;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.Timestamp;
+import com.travel.travelshare.Auth;
 import com.travel.travelshare.R;
+import com.travel.travelshare.model.user.Like;
+import com.travel.travelshare.repositories.LikeRepository;
+import com.travel.travelshare.repositories.PostRepository;
 import com.travel.travelshare.ui.elements.ReturnBarFragment;
 
 import java.time.LocalDate;
@@ -44,7 +54,12 @@ public class CardViewActivity extends AppCompatActivity implements ReturnBarFrag
     private boolean is_public;
     private LocalDate date;
     private String author;
+    private boolean isLikedByUser;
     private String location;
+
+    private LikeRepository likeRepository = new LikeRepository();
+    private PostRepository postRepository = new PostRepository();
+    private Auth auth = Auth.getInstance();
 
     private static String getFormattedDate(LocalDate date) {
         // 1. Format the first part: "Wednesday, November"
@@ -76,10 +91,10 @@ public class CardViewActivity extends AppCompatActivity implements ReturnBarFrag
         INTENT:
 
         IMAGE_PATH
+        POST_ID
         FULL_TEXT_DESCRIPTION
         FULL_TEXT_INSTRUCTIONS
         COUNT_LIKES
-        COUNT_DISLIKES
         IS_PUBLIC
         PUBLISH_DATE
         AUTHOR
@@ -104,8 +119,7 @@ public class CardViewActivity extends AppCompatActivity implements ReturnBarFrag
             this.fullTextInstructions = "Supporting line text lorem ipsum dolor sit amet, consectetur.";
         }
 
-        this.count_likes = getIntent().getIntExtra("COUNT_LIKES", 0);
-        this.count_dislikes = getIntent().getIntExtra("COUNT_DISLIKES", 0);
+        this.count_likes = (int)getIntent().getLongExtra("COUNT_LIKES", 0);
         this.is_public = getIntent().getBooleanExtra("IS_PUBLIC", false);
 
         String dateStr = getIntent().getStringExtra("PUBLISH_DATE");
@@ -141,12 +155,12 @@ public class CardViewActivity extends AppCompatActivity implements ReturnBarFrag
         // Definit la date
         this.dateView = findViewById(R.id.dateView);
         this.dateView.setText(getFormattedDate(this.date));
-        // Definit les likes et dislikes
+        // Definit les likes
         this.likesCountView = findViewById(R.id.like_count);
         this.likesCountView.setText(String.valueOf(this.count_likes));
 
-        this.dislikesCountView = findViewById(R.id.dislike_count);
-        this.dislikesCountView.setText(String.valueOf(this.count_dislikes));
+        //this.dislikesCountView = findViewById(R.id.dislike_count);
+        //this.dislikesCountView.setText(String.valueOf(this.count_dislikes));
 
         // Definit public/privé
         this.publicPrivateButton = findViewById(R.id.public_private_button);
@@ -176,8 +190,66 @@ public class CardViewActivity extends AppCompatActivity implements ReturnBarFrag
 
         Glide.with(this)
                 .load(uri)
+                .centerCrop()
                 .error(R.drawable.explore_24px) // optional: show error if loading fails
                 .into(this.imageCardView);
+
+        ImageView like = (ImageView)findViewById(R.id.image_like);
+
+        likeRepository.checkLike(getIntent().getStringExtra("POST_ID"), auth.getActiveUserId(), isLikedByUser -> {
+            if (isLikedByUser) {
+                like.setImageResource(R.drawable.favorite_filled_24px);
+            }
+            else {
+                like.setImageResource(R.drawable.favorite_24px);
+            }
+        });
+
+        like.setOnClickListener(v -> {
+            String userId = auth.getActiveUserId();
+            String postId = getIntent().getStringExtra("POST_ID");
+
+            String id = likeRepository.putItem();
+
+            if (isLikedByUser) {
+                // remove like
+
+                likeRepository.removeLikes(postId, userId, new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        postRepository.decrementLikes(postId);
+
+                        isLikedByUser = !isLikedByUser;
+                        count_likes--;
+
+                        likesCountView.setText(String.valueOf(count_likes));
+
+                        Toast.makeText(getApplicationContext(), "You removed your like!", Toast.LENGTH_LONG).show();
+
+                        like.setImageResource(R.drawable.favorite_24px);
+                    }
+                });
+            }
+            else {
+                // add like
+                likeRepository.putItem(new Like(id, userId, postId, Timestamp.now()), new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        if (task.isSuccessful()) {
+                            postRepository.incrementLikes(postId);
+
+                            like.setImageResource(R.drawable.favorite_filled_24px);
+
+                            isLikedByUser = !isLikedByUser;
+                            count_likes++;
+                            likesCountView.setText(String.valueOf(count_likes));
+
+                            Toast.makeText(getApplicationContext(), "You liked this post!", Toast.LENGTH_LONG).show();
+                        }
+                    }
+                });
+            }
+        });
     }
 
     private void setIconTextView(TextView textView, String fullText, int imageResId) {

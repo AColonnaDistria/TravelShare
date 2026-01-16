@@ -74,6 +74,7 @@ public class LikesActivity extends AppCompatActivity implements ReturnBarFragmen
                 Intent intent = new Intent(LikesActivity.this, CardViewActivity.class);
 
                 intent.putExtra("IMAGE_PATH", post.getPhoto_URI());
+                intent.putExtra("POST_ID", post.getId());
                 intent.putExtra("FULL_TEXT_DESCRIPTION", post.getDescription());
                 intent.putExtra("FULL_TEXT_INSTRUCTIONS", post.getInstructions());
                 intent.putExtra("COUNT_LIKES", 0);

@@ -94,6 +94,7 @@
             android:layout_height="wrap_content"
             android:paddingBottom="32dp">
 
+            <!--
             <fragment
                 android:id="@+id/fragment_chip_filter"
                 android:name="com.travel.travelshare.ui.elements.ChipFilterFragment"
@@ -102,6 +103,7 @@
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintLeft_toLeftOf="parent"
                 app:layout_constraintRight_toRightOf="parent"/>
+            -->
 
             <com.google.android.material.button.MaterialButtonToggleGroup
             android:id="@+id/toggle_visibility"
@@ -113,7 +115,7 @@
 
             android:layout_marginTop="4dp"
 
-            app:layout_constraintTop_toBottomOf="@id/fragment_chip_filter"
+            app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent">
 

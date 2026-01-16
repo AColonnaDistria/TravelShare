@@ -63,10 +63,10 @@ public class DiscoverFragment extends Fragment {
                 Intent intent = new Intent(getContext(), CardViewActivity.class);
 
                 intent.putExtra("IMAGE_PATH", post.getPhoto_URI());
+                intent.putExtra("POST_ID", post.getId());
                 intent.putExtra("FULL_TEXT_DESCRIPTION", post.getDescription());
                 intent.putExtra("FULL_TEXT_INSTRUCTIONS", post.getInstructions());
-                intent.putExtra("COUNT_LIKES", 0);
-                intent.putExtra("COUNT_DISLIKES", 0);
+                intent.putExtra("COUNT_LIKES", post.getCountLikes());
                 intent.putExtra("IS_PUBLIC", post.getVisibility());
                 intent.putExtra("PUBLISH_DATE", dateStr);
                 intent.putExtra("LOCATION_NAME", post.getLocation().getName());
@@ -119,7 +119,7 @@ public class DiscoverFragment extends Fragment {
     }
 
     private void fetchNextPage() {
-        this.mViewModel.fetchNextPage(picturePosts -> {
+        this.mViewModel.fetchNextPagePublic(picturePosts -> {
             List<String> imageUris = picturePosts.stream().map(post -> post.getPhoto_URI()).collect(Collectors.toList());
             List<String> imagePostIds = picturePosts.stream().map(post -> post.getId()).collect(Collectors.toList());
 

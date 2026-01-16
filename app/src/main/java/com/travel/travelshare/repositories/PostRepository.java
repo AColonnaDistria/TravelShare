@@ -15,6 +15,7 @@ import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.Tasks;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.Filter;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QuerySnapshot;
@@ -31,7 +32,54 @@ public class PostRepository extends SimpleRepository<PicturePost> {
         super(PicturePost.class, "travelshare_picture_posts");
     }
 
+    public void getAllPublic(OnSuccessListener<List<PicturePost>> listener) {
+        this.database.collection(collectionPath)
+                .whereEqualTo("visibility", true)
+                .get()
+                .addOnSuccessListener(querySnapshot -> {
+                    List<PicturePost> items = querySnapshot.getDocuments().stream().map(documentSnapshot -> {
+                        return documentSnapshot.toObject(PicturePost.class);
+                    }).collect(Collectors.toList());
 
+                    if (listener != null) {
+                        listener.onSuccess(items);
+                    }
+                });
+    }
+
+    public void incrementLikes(String postId) {
+        this.database.collection(collectionPath)
+                .document(postId)
+                .update("countLikes", com.google.firebase.firestore.FieldValue.increment(1));
+    }
+
+    public void decrementLikes(String postId) {
+        this.database.collection(collectionPath)
+                .document(postId)
+                .update("countLikes", com.google.firebase.firestore.FieldValue.increment(-1));
+    }
+
+
+    public void getPagePublic(OnSuccessListener<List<PicturePost>> listener, int pageSize, String lastId) {
+        Query query = this.database.collection(this.collectionPath)
+                .orderBy("id")
+                .limit(pageSize);
+
+        if (lastId != null && !lastId.isEmpty()) {
+            query = query.startAfter(lastId);
+        }
+
+        query.get().addOnSuccessListener(querySnapshot -> {
+            List<PicturePost> items = querySnapshot
+                    .getDocuments()
+                    .stream()
+                    .map(documentSnapshot -> {
+                        return documentSnapshot.toObject(PicturePost.class);
+                    }).collect(Collectors.toList());
+
+            listener.onSuccess(items);
+        });
+    }
 
     public void getNearby(double latCenter, double longCenter, double radiusInMeters, OnSuccessListener<List<PicturePost>> listener) {
         GeoLocation center = new GeoLocation(latCenter, longCenter);

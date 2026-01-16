@@ -23,6 +23,8 @@ public class PicturePost implements DatabaseItem {
     private boolean visibility;
     private Location location;
 
+    private Long countLikes;
+
     // Up to 16 annotations
     private ArrayList<Annotation> annotations;
 
@@ -39,8 +41,17 @@ public class PicturePost implements DatabaseItem {
         this.setDate(date);
         this.setVisibility(visibility);
         this.setLocation(location);
+        this.setCountLikes((long)0);
 
         this.createdAt = createdAt;
+    }
+
+    public void setCountLikes(Long countLikes) {
+        this.countLikes = countLikes;
+    }
+
+    public Long getCountLikes() {
+        return this.countLikes;
     }
 
     public PicturePost(Timestamp createdAt) {

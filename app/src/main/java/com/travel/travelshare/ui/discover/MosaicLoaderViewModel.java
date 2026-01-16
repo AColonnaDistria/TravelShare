@@ -86,4 +86,31 @@ public class MosaicLoaderViewModel extends ViewModel {
         }, 16, this.getLastId().getValue());
     }
 
+
+    public void fetchNextPagePublic(OnSuccessListener<List<PicturePost>> listener) {
+        if (Boolean.TRUE.equals(this.getIsLoading().getValue()) || Boolean.TRUE.equals(this.getIsLastPage().getValue())) return;
+
+        this.setIsLoading(true);
+
+        this.postRepository.getPagePublic(newPosts -> {
+            if (newPosts == null || newPosts.isEmpty()) {
+                setIsLastPage(true);
+            }
+            else
+            {
+                ArrayList<PicturePost> currentList = posts.getValue();
+                if (currentList == null) currentList = new ArrayList<>();
+
+                currentList.addAll(newPosts);
+                posts.setValue(currentList);
+                this.setLastId(newPosts.get(newPosts.size() - 1).getId());
+
+                if (listener != null) {
+                    listener.onSuccess(newPosts);
+                }
+            }
+            this.setIsLoading(false);
+        }, 16, this.getLastId().getValue());
+    }
+
 }
