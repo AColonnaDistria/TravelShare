@@ -1,5 +1,7 @@
 package com.travel.travelshare.ui.dialog;
 
+import android.Manifest;
+import android.content.pm.PackageManager;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -9,6 +11,7 @@ import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.lifecycle.ViewModelProvider;
 
@@ -78,31 +81,41 @@ public class LocationPickerDialog extends BottomSheetDialogFragment {
         MapEventsOverlay eventsOverlay = new MapEventsOverlay(mReceive);
         binding.mapPicker.getOverlays().add(eventsOverlay);
 
-        GpsMyLocationProvider provider = new GpsMyLocationProvider(requireContext());
-        MyLocationNewOverlay myLocationOverlay = new MyLocationNewOverlay(provider, binding.mapPicker);
-        myLocationOverlay.enableMyLocation();
+        // Set the center as location
+        if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
 
-        myLocationOverlay.runOnFirstFix(new Runnable() {
-            @Override
-            public void run() {
-                final GeoPoint myLocation = myLocationOverlay.getMyLocation();
-                if (myLocation != null) {
-                    requireActivity().runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
+            ActivityCompat.requestPermissions(getActivity(),
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
+
+            GeoPoint startPoint = new GeoPoint(48.8583, 2.2944);
+            binding.mapPicker.getController().setCenter(startPoint);
+        }
+
+        if (mViewModel.getLastMapCenter() != null) {
+            binding.mapPicker.getController().setCenter(mViewModel.getLastMapCenter());
+            binding.mapPicker.getController().setZoom(mViewModel.getLastZoomLevel());
+        } else {
+            GpsMyLocationProvider provider = new GpsMyLocationProvider(requireContext());
+            MyLocationNewOverlay myLocationOverlay = new MyLocationNewOverlay(provider, binding.mapPicker);
+            myLocationOverlay.enableMyLocation();
+
+            myLocationOverlay.runOnFirstFix(new Runnable() {
+                @Override
+                public void run() {
+                    final GeoPoint myLocation = myLocationOverlay.getMyLocation();
+                    if (myLocation != null) {
+                        requireActivity().runOnUiThread(() -> {
                             binding.mapPicker.getController().animateTo(myLocation);
-                            binding.mapPicker.getController().setZoom(15.0); // Set a closer zoom level
+                            binding.mapPicker.getController().setZoom(15.0);
 
                             selectedMarker.setPosition(myLocation);
-                            binding.mapPicker.invalidate();
-
-                            mViewModel.searchFromMap(getContext(), myLocation.getLatitude(), myLocation.getLongitude());
-                        }
-                    });
+                        });
+                    }
                 }
-            }
-        });
-        binding.mapPicker.getOverlays().add(myLocationOverlay);
+            });
+            binding.mapPicker.getOverlays().add(myLocationOverlay);
+        }
     }
 
 

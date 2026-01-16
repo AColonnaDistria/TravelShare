@@ -10,6 +10,8 @@ import com.travel.travelshare.LocationUtils;
 import com.travel.travelshare.model.location.ExactLocation;
 import com.travel.travelshare.model.location.Location;
 
+import org.osmdroid.util.GeoPoint;
+
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -34,6 +36,15 @@ public class LocationPickerDialogViewModel extends ViewModel {
     public void setIsLoading(boolean isLoading) {
         this.isLoading.setValue(isLoading);
     }
+    private GeoPoint lastMapCenter = null;
+    private Double lastZoomLevel = null;
+    public void saveMapState(GeoPoint center, double zoom) {
+        this.lastMapCenter = center;
+        this.lastZoomLevel = zoom;
+    }
+
+    public GeoPoint getLastMapCenter() { return lastMapCenter; }
+    public Double getLastZoomLevel() { return lastZoomLevel; }
 
     public void searchFromMap(Context context, double lat, double lon) {
         LocationUtils utils = new LocationUtils(context);

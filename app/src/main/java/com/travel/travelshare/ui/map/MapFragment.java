@@ -139,9 +139,6 @@ public class MapFragment extends Fragment {
         this.mapController = map.getController();
         mapController.setZoom(15.0);
 
-        GeoPoint startPoint = new GeoPoint(48.8583, 2.2944);
-        mapController.setCenter(startPoint);
-
         // Set the center as location
 
         if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION)
@@ -149,9 +146,17 @@ public class MapFragment extends Fragment {
 
             ActivityCompat.requestPermissions(getActivity(),
                     new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
+
+            GeoPoint startPoint = new GeoPoint(48.8583, 2.2944);
+            mapController.setCenter(startPoint);
+        }
+
+        if (mViewModel.getLastMapCenter() != null) {
+            mapController.setCenter(mViewModel.getLastMapCenter());
+            mapController.setZoom(mViewModel.getLastZoomLevel());
         } else {
             GpsMyLocationProvider provider = new GpsMyLocationProvider(requireContext());
-            MyLocationNewOverlay myLocationOverlay = new MyLocationNewOverlay(provider, map);
+            MyLocationNewOverlay myLocationOverlay = new MyLocationNewOverlay(provider, binding.map);
             myLocationOverlay.enableMyLocation();
 
             myLocationOverlay.runOnFirstFix(new Runnable() {
@@ -159,17 +164,15 @@ public class MapFragment extends Fragment {
                 public void run() {
                     final GeoPoint myLocation = myLocationOverlay.getMyLocation();
                     if (myLocation != null) {
-                        requireActivity().runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                map.getController().animateTo(myLocation);
-                                map.getController().setZoom(15.0); // Set a closer zoom level
-                            }
+                        requireActivity().runOnUiThread(() -> {
+                            binding.map.getController().animateTo(myLocation);
+                            binding.map.getController().setZoom(15.0);
                         });
                     }
                 }
             });
-            map.getOverlays().add(myLocationOverlay);
+            binding.map.getOverlays().add(myLocationOverlay);
+
         }
 
         map.addMapListener(new DelayedMapListener(new MapListener() {
@@ -204,6 +207,13 @@ public class MapFragment extends Fragment {
 
     @Override
     public void onDestroyView() {
+        if (map != null) {
+            mViewModel.saveMapState(
+                    (GeoPoint) map.getMapCenter(),
+                    map.getZoomLevelDouble()
+            );
+        }
+
         super.onDestroyView();
         binding = null;
     }
