@@ -1,5 +1,6 @@
 package com.travel.travelshare.ui.groups;
 
+import android.content.Intent;
 import android.os.Bundle;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -9,7 +10,9 @@ import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
 import com.travel.travelshare.Auth;
 import com.travel.travelshare.R;
+import com.travel.travelshare.ui.cardview.CardViewActivity;
 import com.travel.travelshare.ui.elements.ReturnBarFragment;
+import com.travel.travelshare.ui.likes.LikesActivity;
 
 public class GroupActivity extends AppCompatActivity implements ReturnBarFragment.OnCloseRequestedListener {
     private GroupViewModel mViewModel;
@@ -37,6 +40,14 @@ public class GroupActivity extends AppCompatActivity implements ReturnBarFragmen
             if (groups != null) {
                 groupAdapter.addGroups(groups);
             }
+        });
+
+        groupAdapter.setOnItemClickListener(groupId -> {
+            Intent intent = new Intent(GroupActivity.this, GroupFeedActivity.class);
+
+            intent.putExtra("GROUP_ID", groupId);
+
+            startActivity(intent);
         });
     }
 

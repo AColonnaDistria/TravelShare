@@ -2,6 +2,9 @@ package com.travel.travelshare.repositories;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.firestore.Query;
 import com.travel.travelshare.model.post.SharedTo;
+import com.travel.travelshare.model.user.Like;
+
+import java.util.List;
 
 public class SharedToRepository extends SimpleRepository<SharedTo> {
     public SharedToRepository() {
@@ -22,6 +25,21 @@ public class SharedToRepository extends SimpleRepository<SharedTo> {
                         }
                     } else if (listener != null) {
                         listener.onSuccess(null);
+                    }
+                });
+    }
+
+    public void getAllSharedToGroup(String groupId, OnSuccessListener<List<SharedTo>> listener) {
+        this.database.collection(collectionPath)
+                .whereEqualTo("userGroupId", groupId) // Filtre par groupe
+                .orderBy("createdAt", Query.Direction.DESCENDING) // Plus récent en premier
+                .limit(1)
+                .get()
+                .addOnSuccessListener(querySnapshot -> {
+                    List<SharedTo> sharedTo = querySnapshot.toObjects(SharedTo.class);
+
+                    if (listener != null) {
+                        listener.onSuccess(sharedTo);
                     }
                 });
     }

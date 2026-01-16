@@ -12,6 +12,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.TravelShare">
         <activity
+            android:name=".ui.groups.GroupFeedActivity"
+            android:exported="false" />
+        <activity
             android:name=".ui.groups.GroupActivity"
             android:exported="false" />
         <activity

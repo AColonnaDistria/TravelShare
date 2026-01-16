@@ -31,6 +31,8 @@ public class PostRepository extends SimpleRepository<PicturePost> {
         super(PicturePost.class, "travelshare_picture_posts");
     }
 
+
+
     public void getNearby(double latCenter, double longCenter, double radiusInMeters, OnSuccessListener<List<PicturePost>> listener) {
         GeoLocation center = new GeoLocation(latCenter, longCenter);
 
