@@ -37,6 +37,14 @@ android {
         buildConfigField("String", "CLOUDINARY_CLOUD_NAME", "\"${cloudinary_cloud_name}\"")
         buildConfigField( "String", "CLOUDINARY_API_KEY", "\"${cloudinary_api_key}\"")
         buildConfigField("String", "CLOUDINARY_API_SECRET", "\"${cloudinary_api_secret}\"")
+
+        val travelpath_api_key = properties.getProperty("TRAVELPATH_API_KEY") ?: ""
+        val travelpath_app_id = properties.getProperty("TRAVELPATH_APP_ID") ?: ""
+        val travelpath_project_id = properties.getProperty("TRAVELPATH_PROJECT_ID") ?: ""
+
+        buildConfigField("String", "TRAVELPATH_API_KEY", "\"${travelpath_api_key}\"")
+        buildConfigField( "String", "TRAVELPATH_APP_ID", "\"${travelpath_app_id}\"")
+        buildConfigField("String", "TRAVELPATH_PROJECT_ID", "\"${travelpath_project_id}\"")
     }
 
     buildFeatures {

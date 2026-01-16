@@ -25,6 +25,8 @@ import androidx.navigation.ui.NavigationUI;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.travel.travelshare.model.travelpath.TravelPath_Activity;
+import com.travel.travelshare.repositories.travelpath.TravelPath_ActivityRepository;
 import com.travel.travelshare.ui.auth.AuthActivity;
 import com.travel.travelshare.databinding.ActivityMainBinding;
 import com.travel.travelshare.model.user.GuestUser;
@@ -56,6 +58,14 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // INIT TRAVELPATH
+        TravelPath_ActivityRepository activityRepository = new TravelPath_ActivityRepository(getApplicationContext());
+        activityRepository.getAll(travelPathActivities -> {
+            for (TravelPath_Activity activity : travelPathActivities) {
+                Log.v("TRAVELPATH", activity.getNom());
+            }
+        });
 
         Auth auth = Auth.getInstance();
         auth.init();
