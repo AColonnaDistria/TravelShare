@@ -101,13 +101,15 @@ public class MapFragment extends Fragment {
                     Intent intent = new Intent(MapFragment.this.getContext(), CardViewActivity.class);
 
                     intent.putExtra("IMAGE_PATH", post.getPhoto_URI());
+                    intent.putExtra("POST_ID", post.getId());
                     intent.putExtra("FULL_TEXT_DESCRIPTION", post.getDescription());
                     intent.putExtra("FULL_TEXT_INSTRUCTIONS", post.getInstructions());
-                    intent.putExtra("COUNT_LIKES", 0);
-                    intent.putExtra("COUNT_DISLIKES", 0);
+                    intent.putExtra("COUNT_LIKES", post.getCountLikes());
                     intent.putExtra("IS_PUBLIC", post.getVisibility());
                     intent.putExtra("PUBLISH_DATE", dateStr);
                     intent.putExtra("LOCATION_NAME", post.getLocation().getName());
+                    intent.putExtra("LATITUDE", post.getLocation().getLatitude());
+                    intent.putExtra("LONGITUDE", post.getLocation().getLongitude());
                     intent.putExtra("AUTHOR", post.getAuthorId());
 
                     startActivity(intent);
